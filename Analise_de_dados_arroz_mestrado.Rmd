@@ -950,7 +950,7 @@ rm(Temporaio)
 
 ## Terras altas
 
-```{r, echo=FALSE , message=FALSE,warning=FALSE}
+```{r, echo=FALSE , message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- TabelabrutaTA %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
 
  ggplot(Temporario)+
@@ -962,7 +962,7 @@ Temporario<- TabelabrutaTA %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>%
   
 ## Irrigado
 
-```{r, echo=FALSE, message=FALSE,warning=FALSE}
+```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- TabelabrutaIRR %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
 
  ggplot(Temporario)+
@@ -971,3 +971,36 @@ Temporario<- TabelabrutaIRR %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>
   labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura média e data de florecimento de arroz irrigados")+
   theme(plot.title = element_text(hjust = 0.5))
 ```
+  
+### Irrigado subtropical
+```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+
+Temporario2<- TabelabrutaIRR %>% mutate( Clima= case_when(UF == "RS" ~ "subtropical", UF != "RS" ~ "tropical"))
+Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia,Clima) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
+
+
+ ggplot(Temporario)+
+  geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+
+  geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura média e data de florecimento de arroz irrigados subtropical")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+### Irrigado tropical
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+
+Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia,Clima) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
+
+
+ ggplot(Temporario)+
+  geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+
+  geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura média e data de florecimento de arroz irrigados tropical")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r , include=FALSE}
+rm(Temporario)
+rm(Temporario2)
+```
+
