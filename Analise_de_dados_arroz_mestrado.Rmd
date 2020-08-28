@@ -1,18 +1,18 @@
 ---
-title:  "REQUERIMENTO DE GRAUS-DIAS PARA O FLORESCIMENTO E MATURAÇÃO DO ARROZ (*Oryza   *sativa
+title:  "REQUERIMENTO DE GRAUS-DIAS PARA O FLORESCIMENTO E MATURAÇÃO DO ARROZ (*Oryza*   *sativa*
   L.) IRRIGADO E TERRAS ALTAS NO BRASIL"
 author: "Gutemberg Resende Honorio Filho"
 date: "25/08/2020"
 output: html_document
            
 ---
-Para acessar o script desta analise acesse [repositório github](<https://github.com/GutembergHonorio/Arroz_Mestrado.git>)
+Para acessar o script desta analise acesse [repositório github](<https://github.com/GutembergHonorio/Arroz_analise.git>)
 
 ```{r Diretório, include=FALSE} 
 # DIRETÓRIO DOS DADOS 
 
 Caminho_dos_dados <- file.path("C:","Users","Gutemberg","Desktop","Mestrado","Dados da Dicertação","Dados Brutos","Merge_1980_2018.csv")
-Tabelabruta<- read.csv(Caminho_dos_dados, header = TRUE, sep = ";", stringsAsFactors = FALSE)
+Tabelabruta<- read.csv(Caminho_dos_dados, header = TRUE, sep = ";", stringsAsFactors = FALSE) # tabela com os dados originais
 ```
 
 # Pacotes necessários
@@ -229,6 +229,7 @@ Rotulos2<-c("Graus",	"Graus",	"metros ao nivel do mar",	"kg/ha",
             "Umidade relativa (%UR)",	"Umidade relativa (%UR)",	"Umidade relativa (%UR)",	"km/h",
             "km/h",	"km/h",	"km/h",	"km/h",	"ºC dia",	"ºC dia",	"ºC dia",	"ºC dia")
 
+
 for(i in 3:61) {
   resumoDadosIRR <- tableGrob(summary(dadosIRR[i]), cols = "Irrigado") 
   resumoDadosTA <- tableGrob(summary(dadosTA[i]),cols = "Terras altas")
@@ -250,9 +251,11 @@ rm(i)
   
   
 # Distribuição geografica dos ensáios
+
+
   
 Mapa do Brasil com as distribuições geográficas dos ensáios
-```{r Mapa com as distribuição dos ensáios, include=FALSE}
+```{r, include=FALSE}
 
 #pacotes necessários 
 #library(geobr)
@@ -310,7 +313,7 @@ names(mediasTA)<- c("",	"",	"latitude",	"longitude",	"Altitude",	"ANO",	"PROD",	
 
 #### Terras altas
 
-  *Correlacionada com variaveis da temperatura
+  **Temperatura**
   
 ```{r , message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasTA[,c(58,	59,	60,	61,	18,	19,	20,	21,	22,	23,	24,	25,	26,	27,	28,	29,	30,	31,	32,	33,	34,	35,	36,	37,	38,	39)]
@@ -318,7 +321,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporario)
 ```
 
-  *Correlacionadas com variáveis de umidade e vento
+  **Umidade e vento**
   
 ```{r , message=FALSE, warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasTA[,c(58,	59,	60,	61,	48,	49,	50,	51,	52,	53,	54,	55,	56,	57)]
@@ -327,7 +330,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporario)
 ```
 
-  *Correlacionadas com variáveis radiação e precipitação
+  **Radiação e precipitação**
   
 ```{r radiação e precipitação, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasTA[,c(58,	59,	60,	61,	40,	41,	42,	43,	44,	45,	46,	47)]
@@ -336,7 +339,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporario)
 ```
 
-  *Correlacionadas com variáveis de desempenhos
+  **Variáveis de desempenhos**
     
 ```{r,message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasTA[,c(7,	8,	9,	12,	13,	14,	15,	16,	17,	58,	59,	60,	61)]
@@ -345,7 +348,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporario)
 ```
 
-  *Geograficos
+  **Geograficos**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasTA[,c(58,	59,	60,	61,	3,	4,	5)]
@@ -353,10 +356,10 @@ na.delete(Temporario)
 chart.Correlation(Temporario, histogram = T)
 rm(Temporaio)
 ```
-
+  
 #### Irrigado
 
-  *Correlacionada com variaveis da TEMPERATURA
+  **Temperatura**
     
 ```{r, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasIRR[,c(58,	59,	60,	61,	18,	19,	20,	21,	22,	23,	24,	25,	26,	27,	28,	29,	30,	31,	32,	33,	34,	35,	36,	37,	38,	39)]
@@ -364,7 +367,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporario)
 ```
 
-  *Correlacionadas com variáveis de umidade e vento
+  **Umidade e vento**
   
 ```{r, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasIRR[,c(58,	59,	60,	61,	48,	49,	50,	51,	52,	53,	54,	55,	56,	57)]
@@ -373,7 +376,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporario)
 ```
 
-  *Correlacionadas com variáveis radiação e precipitação
+  **Radiação e precipitação**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasIRR[,c(58,	59,	60,	61,	40,	41,	42,	43,	44,	45,	46,	47)]
@@ -382,7 +385,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporario)
 ```
 
-  *Correlacionadas com variáveis de desempenhos
+  **Variáveis de desempenhos**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasIRR[,c(7,	8,	9,	12,	13,	14,	15,	16,	17,	58,	59,	60,	61)]
@@ -391,7 +394,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporario)
 ```
 
-  *Geograficos
+  **Geograficos**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasIRR[,c(58,	59,	60,	61,	3,	4,	5)]
@@ -404,7 +407,7 @@ rm(Temporaio)
 
 #### Terras altas
 
-  *Geograficos
+  **Geograficos**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasTA[,c(18,	19,	20,	21,	22,	23,	24,	25,	26,	27,	28,	29,	30,	31,	32,	33,	34,	35,	36,	37,	38,	39,	3,	4,	5)]
@@ -413,7 +416,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporaio)
 ```
 
-  *Umidade e vento
+  **Umidade e vento**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasTA[,c(18,	19,	20,	21,	22,	23,	24,	25,	26,	27,	28,	29,	30,	31,	32,	33,	34,	35,	36,	37,	38,	39,	48,	49,	50,	51,	52,	53,	54,	55,	56,	57)]
@@ -422,7 +425,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporaio)
 ```
 
-  *Radiação e precipitação
+  **Radiação e precipitação**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasTA[,c(18,	19,	20,	21,	22,	23,	24,	25,	26,	27,	28,	29,	30,	31,	32,	33,	34,	35,	36,	37,	38,	39,	40,	41,	42,	43,	44,	45,	46,	47)]
@@ -431,7 +434,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporaio)
 ```
 
-  *Desempenho
+  **Desempenho**
   
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasTA[,c(7,	8,	9,	12,	13,	14,	15,	16,	17,	18,	19,	20,	21,	22,	23,	24,	25,	26,	27,	28,	29,	30,	31,	32,	33,	34,	35,	36,	37,	38,	39)]
@@ -443,7 +446,7 @@ rm(Temporaio)
 #### Irrigado
 
 
-  *Geograficos
+  **Geograficos**
   
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasIRR[,c(18,	19,	20,	21,	22,	23,	24,	25,	26,	27,	28,	29,	30,	31,	32,	33,	34,	35,	36,	37,	38,	39,	3,	4,	5)]
@@ -452,7 +455,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporaio)
 ```
 
-  *Umidade e vento
+  **Umidade e vento**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasIRR[,c(18,	19,	20,	21,	22,	23,	24,	25,	26,	27,	28,	29,	30,	31,	32,	33,	34,	35,	36,	37,	38,	39,	48,	49,	50,	51,	52,	53,	54,	55,	56,	57)]
@@ -461,7 +464,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporaio)
 ```
 
-  *Radiação e precipitação
+  **Radiação e precipitação**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasIRR[,c(18,	19,	20,	21,	22,	23,	24,	25,	26,	27,	28,	29,	30,	31,	32,	33,	34,	35,	36,	37,	38,	39,	40,	41,	42,	43,	44,	45,	46,	47)]
@@ -470,7 +473,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporaio)
 ```
 
-  *Desempenho
+  **Desempenho**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasIRR[,c(7,	8,	9,	12,	13,	14,	15,	16,	17,	18,	19,	20,	21,	22,	23,	24,	25,	26,	27,	28,	29,	30,	31,	32,	33,	34,	35,	36,	37,	38,	39)]
@@ -483,7 +486,7 @@ rm(Temporaio)
 
 #### Terras altas
 
-  *Desempenho
+  **Desempenho**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
   Temporario<- mediasTA[,c(3,4,5,7,8,9,12,13,14,15,16,17)]
@@ -493,7 +496,7 @@ rm(Temporaio)
 
 ```
 
-  *Umidade e vento
+  **Umidade e vento**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
   Temporario<- mediasTA[,c(3,	4,	5,	48,	49,	50,	51,	52,	53,	54,	55,	56,	57)]
@@ -503,7 +506,7 @@ rm(Temporaio)
 
 ```
 
-  *Radiação e precipitação
+  **Radiação e precipitação**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
   Temporario<- mediasTA[,c(3,	4,	5,	40,	41,	42,	43,	44,	45,	46,	47)]
@@ -514,7 +517,7 @@ rm(Temporaio)
 ```
 #### Irrigado
 
-  *Desempenho
+  **Desempenho**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
   Temporario<- mediasIRR[,c(3,4,5,7,8,9,12,13,14,15,16,17)]
@@ -524,7 +527,7 @@ rm(Temporaio)
 
 ```
 
-  *Umidade e vento
+  **Umidade e vento**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
   Temporario<- mediasIRR[,c(3,	4,	5,	48,	49,	50,	51,	52,	53,	54,	55,	56,	57)]
@@ -534,7 +537,7 @@ rm(Temporaio)
 
 ```
 
-  *Radiação e precipitação
+  **Radiação e precipitação**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
   Temporario<- mediasIRR[,c(3,	4,	5,	40,	41,	42,	43,	44,	45,	46,	47)]
@@ -548,7 +551,7 @@ rm(Temporaio)
 
 #### Terras altas
 
-  *Radiação e precipitação
+  **Radiação e precipitação**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
   Temporario<- mediasTA[,c(40,	41,	42,	43,	44,	45,	46,	47,	7,	8,	9,	12,	13,	14,	15,	16,	17)]
@@ -558,7 +561,7 @@ rm(Temporaio)
 
 ```
 
-  *Umidade e vento
+  **Umidade e vento**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
   Temporario<- mediasTA[,c(7,	8,	9,	12,	13,	14,	15,	16,	17,	48,	49,	50,	51,	52,	53,	54,	55,	56,	57)]
@@ -570,7 +573,7 @@ rm(Temporaio)
 
 #### Irrigado
 
-  *Radiação e precipitação
+  **Radiação e precipitação**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
   Temporario<- mediasIRR[,c(40,	41,	42,	43,	44,	45,	46,	47,	7,	8,	9,	12,	13,	14,	15,	16,	17)]
@@ -580,7 +583,7 @@ rm(Temporaio)
 
 ```
 
-  *Umidade e vento
+  **Umidade e vento**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
   Temporario<- mediasIRR[,c(7,	8,	9,	12,	13,	14,	15,	16,	17,	48,	49,	50,	51,	52,	53,	54,	55,	56,	57)]
@@ -594,7 +597,7 @@ rm(Temporaio)
 
 #### Terras altas
 
-  *Radiação e precipitação
+  **Radiação e precipitação**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
   Temporario<- mediasTA[,c(48,	49,	50,	51,	52,	53,	54,	55,	56,	57,	40,	41,	42,	43,	44,	45,	46,	47)]
@@ -606,7 +609,7 @@ rm(Temporaio)
 
 #### Irrigado
 
-  *Radiação e precipitação
+  **Radiação e precipitação**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
   Temporario<- mediasIRR[,c(48,	49,	50,	51,	52,	53,	54,	55,	56,	57,	40,	41,	42,	43,	44,	45,	46,	47)]
@@ -641,7 +644,7 @@ names(mediasTA)<- c("",	"",	"latitude",	"longitude",	"Altitude",	"ANO",	"PROD",	
 
 #### Terras altas
 
-  **Correlacionada com variaveis da temperatura**
+  **Temperatura**
   
 ```{r , message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasTA[,c(58,	59,	60,	61,	18,	19,	20,	21,	22,	23,	24,	25,	26,	27,	28,	29,	30,	31,	32,	33,	34,	35,	36,	37,	38,	39)]
@@ -649,7 +652,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporario)
 ```
 
-  **Correlacionadas com variáveis de umidade e vento**
+  **Umidade e vento**
   
 ```{r , message=FALSE, warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasTA[,c(58,	59,	60,	61,	48,	49,	50,	51,	52,	53,	54,	55,	56,	57)]
@@ -658,7 +661,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporario)
 ```
 
-  **Correlacionadas com variáveis radiação e precipitação**
+  **Radiação e precipitação**
   
 ```{r , message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasTA[,c(58,	59,	60,	61,	40,	41,	42,	43,	44,	45,	46,	47)]
@@ -667,7 +670,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporario)
 ```
 
-  **Correlacionadas com variáveis de desempenhos**
+  **Variáveis de desempenhos**
     
 ```{r,message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasTA[,c(7,	8,	9,	12,	13,	14,	15,	16,	17,	58,	59,	60,	61)]
@@ -687,7 +690,7 @@ rm(Temporaio)
 
 #### Irrigado
 
-  **Correlacionada com variaveis da temperatura**
+  **Temperatura**
     
 ```{r, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasIRR[,c(58,	59,	60,	61,	18,	19,	20,	21,	22,	23,	24,	25,	26,	27,	28,	29,	30,	31,	32,	33,	34,	35,	36,	37,	38,	39)]
@@ -695,7 +698,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporario)
 ```
 
-  **Correlacionadas com variáveis de umidade e vento**
+  **Umidade e vento**
   
 ```{r, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasIRR[,c(58,	59,	60,	61,	48,	49,	50,	51,	52,	53,	54,	55,	56,	57)]
@@ -704,7 +707,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporario)
 ```
 
-  **Correlacionadas com variáveis radiação e precipitação**
+  **Radiação e precipitação**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasIRR[,c(58,	59,	60,	61,	40,	41,	42,	43,	44,	45,	46,	47)]
@@ -713,7 +716,7 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporario)
 ```
 
-  **Correlacionadas com variáveis de desempenhos**
+  **Variáveis de desempenhos**
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- mediasIRR[,c(7,	8,	9,	12,	13,	14,	15,	16,	17,	58,	59,	60,	61)]
@@ -948,10 +951,17 @@ rm(Temporaio)
 
 # Determinação da Temperatura ótima
 
+
 ## Terras altas
 
-```{r, echo=FALSE , message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+ 
+```{r , include=FALSE}
 Temporario<- TabelabrutaTA %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
+```
+
+
+
+```{r, echo=FALSE , message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 
  ggplot(Temporario)+
   geom_point(aes(x=TMedia,y=FLO),Temporario, color= "#EA6E16")+
@@ -959,10 +969,14 @@ Temporario<- TabelabrutaTA %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>%
   labs(x="Temperatura média", y="Data de florecimento" , title ="Relação temperatura média e data de florecimento de arroz de terras altas")+
   theme(plot.title = element_text(hjust = 0.5))
 ```
-  
+```{r}
+cor.test(Temporario$TMedia, Temporario$FLO, method="pearson") #pearson , spearman ou kendall
+```
+
 ## Irrigado
 
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+
 Temporario<- TabelabrutaIRR %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
 
  ggplot(Temporario)+
@@ -971,6 +985,8 @@ Temporario<- TabelabrutaIRR %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>
   labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura média e data de florecimento de arroz irrigados")+
   theme(plot.title = element_text(hjust = 0.5))
 ```
+
+
   
 ### Irrigado subtropical
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
@@ -986,6 +1002,8 @@ Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  mutate( TMedia = 
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
+
+
 ### Irrigado tropical
 
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
@@ -999,8 +1017,10 @@ Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  mutate( TMedia = ((T
   labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura média e data de florecimento de arroz irrigados tropical")+
   theme(plot.title = element_text(hjust = 0.5))
 ```
+
 ```{r , include=FALSE}
 rm(Temporario)
 rm(Temporario2)
 ```
+
 
