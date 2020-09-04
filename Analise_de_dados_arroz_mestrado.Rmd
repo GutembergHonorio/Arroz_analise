@@ -156,11 +156,9 @@ names(dadosTA)<- c("latitude",	"longitude",	"Altitude",	"Produtividade ",
 
 ```{r Tabela exploratória TA, echo=FALSE}
 #Pacotes
-
 #Obs.: Caso queira instalaro o pacote XDA é necessário instalar os pacotes abaixo:
-
- # *`library(devtools)`
- # *`install_github("ujjwalkarn/xda")`
+ #`library(devtools)`
+ #`install_github("ujjwalkarn/xda")`
 
 Descritivo_TA<-numSummary(dadosTA)
 paged_table(Descritivo_TA)
@@ -168,11 +166,8 @@ paged_table(Descritivo_TA)
 
 ## Boxplots das principais variáveis
 
+```{r Boxplots, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 
-```{r Boxplots, echo=FALSE, warning=FALSE, fig.align='center', out.width='55%'}
-
-#Pacote necessário
-#library(gridExtra) 
 
 rotulos<-c( "latitude",	"longitude",	"Altitude",	"Produtividade ",	
             "Data de Florescimento (DAE)",	"Altura da planta",
@@ -181,28 +176,28 @@ rotulos<-c( "latitude",	"longitude",	"Altitude",	"Produtividade ",
             "Iniciação da panícula estimada",	"Iniciação da primeira panícula",	
             "Maturação fisiológica",	"Maturação fisiológica estimada",	
             "Maturação fisiológica máxima",	"Temperatura máxima no ciclo da cultura",
-            "Temperatura mínima no ciclo da cultura",	
-            "Temperatura média no ciclo da cultura",	
-            "Temperatura máxima na iniciação da panícula",
-            "Temperatura máxima no florescimento",	"Temperatura máxima no período vegetativo",	
-            "Temperatura máxima acumulada no período vegetativo",	"Temperatura máxima no período reprodutivo",
-            "Temperatura máxima acumulada no período reprodutivo",
-            "Temperatura máxima no período de enchimento de grãos",	
-            "Temperatura máxima acumulada no período de enchimento de grãos",	
+            "Temp. mínima no ciclo da cultura",	
+            "Temp. média no ciclo da cultura",	
+            "Temp. máxima na iniciação da panícula",
+            "Temp. máxima no florescimento",	"Temperatura máxima no período vegetativo",	
+            "Temp. máxima acumulada no período vegetativo",	"Temperatura máxima no período reprodutivo",
+            "Temp. máxima acumulada no período reprodutivo",
+            "Temp. máxima no período de enchimento de grãos",	
+            "Temp. máxima acumulada no período de enchimento de grãos",	
             "Valor máximo da temperatura mínima no ciclo da cultura ",
             "Valor mínima da temperatura mínima no ciclo da cultura",	
             "Valor médio da temperatura mínima no ciclo da cultura",	
             "Valor da temperatura mínima durante a ocorrência da iniciação da panicula",
             "Valor da temperatura mínima durante a ocorrência do florecimento",
-            "Temperatura mínima no período vegetativo",	
-            "Temperatura mínima acumulada no  período vegetativo",	
-            "Temperatura mínima no período reprodutivo",	
-            "Temperatura mínima acumulada no período reprodutivo",	
-            "Temperatura mínima no período do enchimento de grãos",	
-            "Temperatura mínima acumulada no períodode enchimento de grãos",
-            "Precipitação acumulada no ciclo da cultura",	"Precipitação acumulada no período vegetativo",	
-            "Precipitação acumulada no períodoreprodutivo",	
-            "Precipitação acumulada no período de enchimento de grãos",	
+            "Temp. mínima no período vegetativo",	
+            "Temp. mínima acumulada no  período vegetativo",	
+            "Temp. mínima no período reprodutivo",	
+            "Temp. mínima acumulada no período reprodutivo",	
+            "Temp. mínima no período do enchimento de grãos",	
+            "Temp. mínima acumulada no períodode enchimento de grãos",
+            "Precip. acumulada no ciclo da cultura",	"Precip. acumulada no período vegetativo",	
+            "Precip. acumulada no períodoreprodutivo",	
+            "Precip. acumulada no período de enchimento de grãos",	
             "Radiação acumulada no ciclo da cultura",	"Radiação acumulada no período vegetativo",	
             "Radiação acumulada no período reprodutivo",	"Radiação acumulada no período de enchimento de grãos",
             "Umidade média no ciclo da cultura",	"Umidade no periodo de florescimento ",	
@@ -230,25 +225,33 @@ Rotulos2<-c("Graus",	"Graus",	"metros ao nivel do mar",	"kg/ha",
             "km/h",	"km/h",	"km/h",	"km/h",	"ºC dia",	"ºC dia",	"ºC dia",	"ºC dia")
 
 
-for(i in 3:61) {
+for(i in 1:31) {
   resumoDadosIRR <- tableGrob(summary(dadosIRR[i]), cols = "Irrigado") 
   resumoDadosTA <- tableGrob(summary(dadosTA[i]),cols = "Terras altas")
   
- dadosNum <- ggplot (data = dadosIRR) +
-    geom_boxplot(aes(y= dadosIRR[,i], x= "Irrigado"), data = dadosIRR, color= "blue")+
-    geom_boxplot(aes(y= dadosTA[,i], x= "Terras altas"), data = dadosTA, color= "#EA6E16")+
+  dadosNum <- ggplot (data = dadosIRR) +
+    geom_boxplot(aes(y= dadosIRR[,i], x= "Irr."), data = dadosIRR, color= "blue")+
+    geom_boxplot(aes(y= dadosTA[,i], x= "T. a."), data = dadosTA, color= "#EA6E16")+
     labs(x = rotulos[i], y=Rotulos2[i] )
+  ResumoDadosIRR <- tableGrob(summary(dadosIRR[i+30]), cols = "Irrigado") 
+  ResumoDadosTA <- tableGrob(summary(dadosTA[i+30]),cols = "Terras altas")
+  
+  DadosNum <- ggplot (data = dadosIRR) +
+    geom_boxplot(aes(y= dadosIRR[,i+30], x= "Irr."), data = dadosIRR, color= "blue")+
+    geom_boxplot(aes(y= dadosTA[,i+30], x= "T. a."), data = dadosTA, color= "#EA6E16")+
+    labs(x = rotulos[i], y=Rotulos2[i+30] )
   
   
- Boxplot_por_sist_cult<-grid.arrange(resumoDadosIRR, dadosNum,resumoDadosTA , ncol=3)
-
-   
+  Boxplot_por_sist_cult1<-grid.arrange(resumoDadosIRR, dadosNum,resumoDadosTA ,ResumoDadosIRR, DadosNum,ResumoDadosTA , ncol=6)
+  
+  
 }
+
 rm(Rotulos2)
 rm(rotulos)
 rm(i)
 ```
-  
+
   
 # Distribuição geografica e temporal dos ensáios
 
@@ -321,15 +324,241 @@ ggplot(Temporario) +
   theme_classic()
 ```
 
-```{r}
+#```{r , echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- Tabelabruta %>% mutate(TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(latitude) %>% summarise(TMedia = mean(TMedia), Tmax = mean(Tmax_Media), Tmin = mean(Tmin_Media), CICLO = (mean(Tabelabruta$MF_E)))
 
 ggplot(Temporario) +
-  geom_line(aes(y=CICLO, x= latitude))+
-  labs(y="Ciclo total da cultura (DAE)", x= "Latitude", color = "Legenda", title ="Variação da temperatura média minima, média e média maxima pela Latitude")+
+  geom_line(aes(x=Tmax, y= latitude), data = Temporario)+
+  geom_line(aes(x=TMedia, y= latitude), data = Temporario)+
+  geom_line(aes(x=Tmin, y= latitude), data = Temporario)+
+  labs(x="Temperatura (ºC)", y= "Latitude", color = "Legenda", title ="Variação da temperatura média minima, média e média maxima pela Latitude")+
+  theme_classic()
+#```
+
+
+# Determinação da Temperatura ótima
+
+
+## Terras altas
+
+ 
+```{r , include=FALSE}
+Temporario<- TabelabrutaTA %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
+```
+
+
+
+```{r, echo=FALSE , message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+
+ ggplot(Temporario)+
+  geom_point(aes(x=TMedia,y=FLO),Temporario, color= "#EA6E16")+
+  geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura média", y="Data de florecimento" , title ="Relação temperatura média e data de florecimento de arroz de terras altas")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r , echo=FALSE}
+a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
+c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
+d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method="pearson") #pearson , spearman ou kendall
+Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
+rm(a)
+rm(c)
+rm(d)
+paged_table(Corre)
+```
+
+## Irrigado
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+
+Temporario<- TabelabrutaIRR %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
+
+ dadosNum<-ggplot(Temporario)+
+  geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+
+  geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura média e data de florecimento de arroz irrigados")+
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+```
+
+```{r , }
+a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
+c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
+d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method="pearson") #pearson , spearman ou kendall
+Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
+rm(a)
+rm(c)
+rm(d)
+paged_table(Corre)
+```
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+
+Temporario<- TabelabrutaIRR %>% group_by(FLO) %>% summarise(Tmax = mean(Tmax_Media), Tmin = mean(Tmin_Media)) %>% na.omit(Temporario)
+
+ dadosNum<-ggplot(Temporario)+
+  geom_point(aes(x=Tmax,y=FLO),Temporario, color= "blue")+
+  geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+ 
+  #geom_smooth(aes(x=TMedia,y=FLO), se= T, color = "black")+
+  labs(x="Temperatura (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura máxima e minima e data de florecimento de arroz irrigados")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
+c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
+d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method="pearson") #pearson , spearman ou kendall
+Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
+rm(a)
+rm(c)
+rm(d)
+paged_table(Corre)
+```
+  
+### Irrigado subtropical
+```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+
+Temporario2<- TabelabrutaIRR %>% mutate( Clima= case_when(latitude < -29 ~ "subtropical", latitude > -30 ~ "tropical"))
+Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia,Clima) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
+
+
+ ggplot(Temporario)+
+  geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+
+  geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura média e data de florecimento de arroz irrigados subtropical")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r , echo=FALSE}
+a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
+c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
+d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method="pearson") #pearson , spearman ou kendall
+Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
+rm(a)
+rm(c)
+rm(d)
+paged_table(Corre)
+```
+
+
+### Irrigado tropical
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+
+Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia,Clima) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
+
+
+ ggplot(Temporario)+
+  geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+
+  geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura média e data de florecimento de arroz irrigados tropical")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r , echo=FALSE}
+a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
+c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
+d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method="pearson") #pearson , spearman ou kendall
+Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
+rm(a)
+rm(c)
+rm(d)
+paged_table(Corre)
+```
+```{r , include=FALSE}
+rm(Temporario)
+rm(Temporario2)
+```
+
+# Influencia geografica
+
+
+```{r , message=FALSE,warning=FALSE}
+Temporario<- Tabelabruta %>% group_by(latitude) %>% summarise(graus_dia_ciclo=mean(graus_dia_ciclo))
+
+ggplot(Temporario) +
+  geom_point(aes(y=graus_dia_ciclo, x= latitude))+
+  geom_smooth(aes(y=graus_dia_ciclo,x= latitude), se= T, method='lm', color = "black")+
+  labs(y="Graus-dia (ºC)", x= "Latitude", color = "Legenda", title ="Variação do graus-dia do ciclo pela Latitude")+
   theme_classic()
 ```
 
+# Determinação do graus-dia para o ciclo
+
+```{r , echo=FALSE,message=FALSE,warning=FALSE}
+Temporario<- Tabelabruta %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_ciclo=mean(graus_dia_ciclo), N_G=mean(N_G))
+Temporario<- Temporario %>% mutate(N_G = 1:1014)
+ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
+  geom_point()+
+  geom_hex(bins = 20)+scale_fill_continuous(type = "viridis") +
+  geom_smooth(color = "red")+
+  labs(y="Graus-dia (ºC)", x= "Genótipo", title ="Variação do graus-dia do ciclo pelo genótipo")+
+  theme_classic()
+```
+ A soma termica necessários para que as plantas completem o ciclo concentram-se principalmente entre 2000 e 2250 ºC, variando conforme o genótipo. A correlação entre genótipo e graus-dia para o ciclo total pode ser conferido na tabela abaixo:
+
+```{r , echo=FALSE,message=FALSE,warning=FALSE}
+
+a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)) 
+c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)^2)
+d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_ciclo, method="pearson") #pearson , spearman ou kendall
+Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
+rm(a)
+rm(c)
+rm(d)
+paged_table(Corre)
+```
+
+
+## Terras altas
+
+```{r , echo=FALSE,message=FALSE,warning=FALSE}
+Temporario<- TabelabrutaTA %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_ciclo=mean(graus_dia_ciclo), N_G=mean(N_G))
+Temporario<- Temporario %>% mutate(N_G = 1:500)
+ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
+  geom_point()+
+  geom_density_2d()+
+  #geom_hex(bins = 10)+scale_fill_continuous(type = "viridis") +
+  geom_smooth(color = "red")+
+  labs(y="Graus-dia (ºC)", x= "Genótipo", title ="Variação do graus-dia do ciclo pelo genótipo")+
+  theme_classic()
+
+```
+
+```{r , echo=FALSE,message=FALSE,warning=FALSE}
+a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)) 
+c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)^2)
+d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_ciclo, method="pearson") #pearson , spearman ou kendall
+Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
+rm(a)
+rm(c)
+rm(d)
+paged_table(Corre)
+```
+
+## Irrigado
+
+```{r , echo=FALSE,message=FALSE,warning=FALSE}
+Temporario<- TabelabrutaIRR %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_ciclo=mean(graus_dia_ciclo), N_G=mean(N_G))
+Temporario<- Temporario %>% mutate(N_G = 1:530)
+ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
+  geom_point()+
+  geom_density_2d()+
+  #geom_hex(bins = 10)+scale_fill_continuous(type = "viridis") +
+  geom_smooth(color = "red")+
+  labs(y="Graus-dia (ºC)", x= "Genótipo", title ="Variação do graus-dia do ciclo pelo genótipo")+
+  theme_classic()
+
+```
+
+```{r , echo=FALSE,message=FALSE,warning=FALSE}
+a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)) 
+c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)^2)
+d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_ciclo, method="pearson") #pearson , spearman ou kendall
+Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
+rm(a)
+rm(c)
+rm(d)
+paged_table(Corre)
+```
 
 # Correlações
   
@@ -930,6 +1159,7 @@ rm(Temporaio)
 #### Terras altas
 
   **Radiação e precipitação**
+   
     
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
   Temporario<- mediasTA[,c(40,	41,	42,	43,	44,	45,	46,	47,	7,	8,	9,	12,	13,	14,	15,	16,	17)]
@@ -996,203 +1226,3 @@ chart.Correlation(Temporario, histogram = T)
 rm(Temporaio)
 ```
 
-# Determinação da Temperatura ótima
-
-
-## Terras altas
-
- 
-```{r , include=FALSE}
-Temporario<- TabelabrutaTA %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
-```
-
-
-
-```{r, echo=FALSE , message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
-
- ggplot(Temporario)+
-  geom_point(aes(x=TMedia,y=FLO),Temporario, color= "#EA6E16")+
-  geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura média", y="Data de florecimento" , title ="Relação temperatura média e data de florecimento de arroz de terras altas")+
-  theme(plot.title = element_text(hjust = 0.5))
-```
-```{r , echo=FALSE}
-a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
-c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
-d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method="pearson") #pearson , spearman ou kendall
-Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
-rm(a)
-rm(c)
-rm(d)
-paged_table(Corre)
-```
-
-## Irrigado
-
-```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
-
-Temporario<- TabelabrutaIRR %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
-
- ggplot(Temporario)+
-  geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+
-  geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura média e data de florecimento de arroz irrigados")+
-  theme(plot.title = element_text(hjust = 0.5))
-```
-
-```{r , echo=FALSE}
-a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
-c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
-d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method="pearson") #pearson , spearman ou kendall
-Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
-rm(a)
-rm(c)
-rm(d)
-paged_table(Corre)
-```
-
-  
-### Irrigado subtropical
-```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
-
-Temporario2<- TabelabrutaIRR %>% mutate( Clima= case_when(UF == "RS" ~ "subtropical", UF != "RS" ~ "tropical"))
-Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia,Clima) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
-
-
- ggplot(Temporario)+
-  geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+
-  geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura média e data de florecimento de arroz irrigados subtropical")+
-  theme(plot.title = element_text(hjust = 0.5))
-```
-```{r , echo=FALSE}
-a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
-c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
-d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method="pearson") #pearson , spearman ou kendall
-Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
-rm(a)
-rm(c)
-rm(d)
-paged_table(Corre)
-```
-
-
-### Irrigado tropical
-
-```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
-
-Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia,Clima) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
-
-
- ggplot(Temporario)+
-  geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+
-  geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura média e data de florecimento de arroz irrigados tropical")+
-  theme(plot.title = element_text(hjust = 0.5))
-```
-```{r , echo=FALSE}
-a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
-c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
-d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method="pearson") #pearson , spearman ou kendall
-Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
-rm(a)
-rm(c)
-rm(d)
-paged_table(Corre)
-```
-```{r , include=FALSE}
-rm(Temporario)
-rm(Temporario2)
-```
-
-# Influencia geografica
-
-
-```{r , message=FALSE,warning=FALSE}
-Temporario<- Tabelabruta %>% group_by(latitude) %>% summarise(graus_dia_ciclo=mean(graus_dia_ciclo))
-
-ggplot(Temporario) +
-  geom_point(aes(y=graus_dia_ciclo, x= latitude))+
-  geom_smooth(aes(y=graus_dia_ciclo,x= latitude), se= T, method='lm', color = "black")+
-  labs(y="Graus-dia (ºC)", x= "Latitude", color = "Legenda", title ="Variação do graus-dia do ciclo pela Latitude")+
-  theme_classic()
-```
-
-# Determinação do graus-dia para o ciclo
-
-```{r , echo=FALSE,message=FALSE,warning=FALSE}
-Temporario<- Tabelabruta %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_ciclo=mean(graus_dia_ciclo), N_G=mean(N_G))
-Temporario<- Temporario %>% mutate(N_G = 1:1014)
-ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
-  geom_point()+
-  geom_hex(bins = 20)+scale_fill_continuous(type = "viridis") +
-  geom_smooth(color = "red")+
-  labs(y="Graus-dia (ºC)", x= "Genótipo", title ="Variação do graus-dia do ciclo pelo genótipo")+
-  theme_classic()
-```
- A soma termica necessários para que as plantas completem o ciclo concentram-se principalmente entre 2000 e 2250 ºC, variando conforme o genótipo. A correlação entre genótipo e graus-dia para o ciclo total pode ser conferido na tabela abaixo:
-
-```{r , echo=FALSE,message=FALSE,warning=FALSE}
-
-a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)) 
-c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)^2)
-d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_ciclo, method="pearson") #pearson , spearman ou kendall
-Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
-rm(a)
-rm(c)
-rm(d)
-paged_table(Corre)
-```
-
-
-## Terras altas
-
-```{r , echo=FALSE,message=FALSE,warning=FALSE}
-Temporario<- TabelabrutaTA %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_ciclo=mean(graus_dia_ciclo), N_G=mean(N_G))
-Temporario<- Temporario %>% mutate(N_G = 1:500)
-ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
-  geom_point()+
-  geom_density_2d()+
-  #geom_hex(bins = 10)+scale_fill_continuous(type = "viridis") +
-  geom_smooth(color = "red")+
-  labs(y="Graus-dia (ºC)", x= "Genótipo", title ="Variação do graus-dia do ciclo pelo genótipo")+
-  theme_classic()
-
-```
-
-```{r , echo=FALSE,message=FALSE,warning=FALSE}
-a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)) 
-c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)^2)
-d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_ciclo, method="pearson") #pearson , spearman ou kendall
-Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
-rm(a)
-rm(c)
-rm(d)
-paged_table(Corre)
-```
-
-## Irrigado
-
-```{r , echo=FALSE,message=FALSE,warning=FALSE}
-Temporario<- TabelabrutaIRR %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_ciclo=mean(graus_dia_ciclo), N_G=mean(N_G))
-Temporario<- Temporario %>% mutate(N_G = 1:530)
-ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
-  geom_point()+
-  geom_density_2d()+
-  #geom_hex(bins = 10)+scale_fill_continuous(type = "viridis") +
-  geom_smooth(color = "red")+
-  labs(y="Graus-dia (ºC)", x= "Genótipo", title ="Variação do graus-dia do ciclo pelo genótipo")+
-  theme_classic()
-
-```
-
-```{r , echo=FALSE,message=FALSE,warning=FALSE}
-a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)) 
-c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)^2)
-d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_ciclo, method="pearson") #pearson , spearman ou kendall
-Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
-rm(a)
-rm(c)
-rm(d)
-paged_table(Corre)
-```
