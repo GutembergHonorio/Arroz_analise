@@ -314,7 +314,7 @@ ggplot(Tabelabruta) +
   Conforme demonstrado no grafico abaixo o **ciclo da cultura varia pela latitude**, isso se dá pelas **variação de temperatura**, sendo que as médias são maiores quando a latitude se aproxima de 0.
     
 
-```{r , echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+```{r , warning=FALSE, message= FALSE, echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 
 Temporario<-Tabelabruta %>% group_by(latitude) %>% summarise(ciclo=mean(MF_E))
 ggplot(Temporario) +
@@ -324,7 +324,8 @@ ggplot(Temporario) +
   theme_classic()
 ```
 
-#```{r , echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+Variação da temperatura pela latitude
+```{r , echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Temporario<- Tabelabruta %>% mutate(TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(latitude) %>% summarise(TMedia = mean(TMedia), Tmax = mean(Tmax_Media), Tmin = mean(Tmin_Media), CICLO = (mean(Tabelabruta$MF_E)))
 
 ggplot(Temporario) +
@@ -333,7 +334,7 @@ ggplot(Temporario) +
   geom_line(aes(x=Tmin, y= latitude), data = Temporario)+
   labs(x="Temperatura (ºC)", y= "Latitude", color = "Legenda", title ="Variação da temperatura média minima, média e média maxima pela Latitude")+
   theme_classic()
-#```
+```
 
 
 # Determinação da Temperatura ótima
@@ -369,11 +370,12 @@ paged_table(Corre)
 
 ## Irrigado
 
+Temperatura média
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 
 Temporario<- TabelabrutaIRR %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
 
- dadosNum<-ggplot(Temporario)+
+ ggplot(Temporario)+
   geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+
   geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
   labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura média e data de florecimento de arroz irrigados")+
@@ -382,7 +384,7 @@ Temporario<- TabelabrutaIRR %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>
 
 ```
 
-```{r , }
+```{r , echo=FALSE }
 a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
 c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
 d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method="pearson") #pearson , spearman ou kendall
@@ -392,28 +394,19 @@ rm(c)
 rm(d)
 paged_table(Corre)
 ```
-
+Temperatura minima e máxima
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 
 Temporario<- TabelabrutaIRR %>% group_by(FLO) %>% summarise(Tmax = mean(Tmax_Media), Tmin = mean(Tmin_Media)) %>% na.omit(Temporario)
 
- dadosNum<-ggplot(Temporario)+
+ggplot(Temporario)+
   geom_point(aes(x=Tmax,y=FLO),Temporario, color= "blue")+
-  geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+ 
+  geom_point(aes(x=Tmin,y=FLO),Temporario, color= "blue")+ 
   #geom_smooth(aes(x=TMedia,y=FLO), se= T, color = "black")+
   labs(x="Temperatura (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura máxima e minima e data de florecimento de arroz irrigados")+
   theme(plot.title = element_text(hjust = 0.5))
 ```
-```{r}
-a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
-c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
-d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method="pearson") #pearson , spearman ou kendall
-Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
-rm(a)
-rm(c)
-rm(d)
-paged_table(Corre)
-```
+
   
 ### Irrigado subtropical
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
@@ -429,13 +422,13 @@ Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  mutate( TMedia = 
   theme(plot.title = element_text(hjust = 0.5))
 ```
 ```{r , echo=FALSE}
+
 a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
 c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
 d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method="pearson") #pearson , spearman ou kendall
+
 Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
-rm(a)
-rm(c)
-rm(d)
+
 paged_table(Corre)
 ```
 
@@ -454,13 +447,13 @@ Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  mutate( TMedia = ((T
   theme(plot.title = element_text(hjust = 0.5))
 ```
 ```{r , echo=FALSE}
+
 a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
 c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
 d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method="pearson") #pearson , spearman ou kendall
+
 Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
-rm(a)
-rm(c)
-rm(d)
+
 paged_table(Corre)
 ```
 ```{r , include=FALSE}
