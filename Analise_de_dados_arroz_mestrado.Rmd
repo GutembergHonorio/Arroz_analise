@@ -246,7 +246,12 @@ for(i in 1:31) {
   
   
 }
-
+rm(ResumoDadosIRR)
+rm(ResumoDadosTA)
+rm(resumoDadosIRR)
+rm(resumoDadosTA)
+rm(dadosNum)
+rm(DadosNum)
 rm(Rotulos2)
 rm(rotulos)
 rm(i)
@@ -273,12 +278,12 @@ rm(Temporario)
 ## Mapa do Brasil com as distribuições geográficas dos ensáios
 
 ```{r, include=FALSE}
-
 #pacotes necessários 
 #library(geobr)
 #library(ggspatial)
 #library(spatstat)
-
+```
+```{r , include=F}
 Brasil<- read_state(code_state="all",year=2010)
 
 
@@ -322,6 +327,7 @@ ggplot(Temporario) +
   geom_smooth(aes(x=latitude,y=ciclo), se= T, method='lm', color = "black")+
   labs(y="Dias após a emergência (DAE)", x= "Latitude", color = "Legenda", title ="Correlação do ciclo da cultura com a Latitude")+
   theme_classic()
+rm(Temporario)
 ```
 
 Variação da temperatura pela latitude
@@ -334,6 +340,7 @@ ggplot(Temporario) +
   geom_line(aes(x=Tmin, y= latitude), data = Temporario)+
   labs(x="Temperatura (ºC)", y= "Latitude", color = "Legenda", title ="Variação da temperatura média minima, média e média maxima pela Latitude")+
   theme_classic()
+rm(Temporario)
 ```
 
 
@@ -343,124 +350,296 @@ ggplot(Temporario) +
 ## Terras altas
 
  
-```{r , include=FALSE}
-Temporario<- TabelabrutaTA %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
-```
+Relação da temperatura média, máxima e mínima com a data de florecimento 
+```{r, include=FALSE ,  message=F , warning=F}
 
+Temporario<- TabelabrutaTA %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO) %>% summarise(TMedia= mean(TMedia)) %>% na.omit(Temporario)
 
-
-```{r, echo=FALSE , message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
-
- ggplot(Temporario)+
+ t_me<-ggplot(Temporario)+
   geom_point(aes(x=TMedia,y=FLO),Temporario, color= "#EA6E16")+
   geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura média", y="Data de florecimento" , title ="Relação temperatura média e data de florecimento de arroz de terras altas")+
+  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)")+
   theme(plot.title = element_text(hjust = 0.5))
-```
-```{r , echo=FALSE}
+
+
 a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
 c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
 d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method="pearson") #pearson , spearman ou kendall
-Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
-rm(a)
-rm(c)
-rm(d)
-paged_table(Corre)
+f<-data.frame("Estatística" =c("S²", "Cor", "r²","Valor_P"))
+E<-data.frame("T. média" =c(a,d$estimate, c , d$p.value))
+Corre_est<-tableGrob(f)
+Corre_med<-tableGrob(E)
+
+rm(Temporario)
+
 ```
+
+```{r, include=FALSE , message=F , warning=F}
+
+Temporario<- TabelabrutaTA %>% group_by(FLO) %>% summarise(Tmax = mean(Tmax_Media)) %>% na.omit(Temporario)
+
+t_ma<-ggplot(Temporario)+
+  geom_point(aes(x=Tmax,y=FLO),Temporario, color= "#EA6E16")+
+  geom_smooth(aes(x=Tmax,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura máxima (ºC)", y="Data de florecimento (DAE)" )+
+  theme(plot.title = element_text(hjust = 0.5))
+
+a<-c(var(x=Temporario$Tmax,y=Temporario$FLO)) 
+c<-c(cor(x=Temporario$Tmax,y=Temporario$FLO)^2)
+d<-cor.test(y=Temporario$FLO, x=Temporario$Tmax, method="pearson") #pearson , spearman ou kendall
+E<-data.frame("T. máxima" =c(a,d$estimate, c , d$p.value))
+
+Corre_max<-tableGrob(E)
+```
+```{r, include=FALSE , message=F , warning=F}
+Temporario<- TabelabrutaTA %>% group_by(FLO) %>% summarise(Tmin = mean(Tmin_Media)) %>% na.omit(Temporario)
+
+t_mi<-ggplot(Temporario)+
+  geom_point(aes(x=Tmin,y=FLO),Temporario, color= "#EA6E16")+
+  geom_smooth(aes(x=Tmin,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura mínima (ºC)", y="Data de florecimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+
+a<-c(var(x=Temporario$Tmin,y=Temporario$FLO)) 
+c<-c(cor(x=Temporario$Tmin,y=Temporario$FLO)^2)
+d<-cor.test(y=Temporario$FLO, x=Temporario$Tmin, method="pearson") #pearson , spearman ou kendall
+E<-data.frame("T. mínima" =c(a,d$estimate, c , d$p.value))
+
+Corre_min<-tableGrob(E)
+
+```
+
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+
+T_O_TA<-grid.arrange(t_me, t_ma, t_mi, ncol=3)
+Corre_TA<-grid.arrange(Corre_est,Corre_med,Corre_max,Corre_min, ncol=4)
+T_O_TA
+Corre_TA
+```
+
+
+  A menor data de floração foi aos **46** dias após a emergência, onde a temperatura foi **26,81ºC**. 
 
 ## Irrigado
+Relação da temperatura média, máxima e mínima com a data de florecimento 
+```{r, include=FALSE ,  message=F , warning=F}
 
-Temperatura média
-```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+Temporario<- TabelabrutaIRR %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO) %>% summarise(TMedia= mean(TMedia)) %>% na.omit(Temporario)
 
-Temporario<- TabelabrutaIRR %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
-
- ggplot(Temporario)+
+ t_me<-ggplot(Temporario)+
   geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+
   geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura média e data de florecimento de arroz irrigados")+
+  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)")+
   theme(plot.title = element_text(hjust = 0.5))
 
 
-```
-
-```{r , echo=FALSE }
 a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
 c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
 d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method="pearson") #pearson , spearman ou kendall
-Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
-rm(a)
-rm(c)
-rm(d)
-paged_table(Corre)
+f<-data.frame("Estatística" =c("S²", "Cor", "r²","Valor_P"))
+E<-data.frame("T. média" =c(a,d$estimate, c , d$p.value))
+Corre_est<-tableGrob(f)
+Corre_med<-tableGrob(E)
+
+rm(Temporario)
+
 ```
-Temperatura minima e máxima
-```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 
-Temporario<- TabelabrutaIRR %>% group_by(FLO) %>% summarise(Tmax = mean(Tmax_Media), Tmin = mean(Tmin_Media)) %>% na.omit(Temporario)
+```{r, include=FALSE , message=F , warning=F}
 
-ggplot(Temporario)+
+Temporario<- TabelabrutaIRR %>% group_by(FLO) %>% summarise(Tmax = mean(Tmax_Media)) %>% na.omit(Temporario)
+
+t_ma<-ggplot(Temporario)+
   geom_point(aes(x=Tmax,y=FLO),Temporario, color= "blue")+
-  geom_point(aes(x=Tmin,y=FLO),Temporario, color= "blue")+ 
-  #geom_smooth(aes(x=TMedia,y=FLO), se= T, color = "black")+
-  labs(x="Temperatura (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura máxima e minima e data de florecimento de arroz irrigados")+
+  geom_smooth(aes(x=Tmax,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura máxima (ºC)", y="Data de florecimento (DAE)" )+
   theme(plot.title = element_text(hjust = 0.5))
+
+a<-c(var(x=Temporario$Tmax,y=Temporario$FLO)) 
+c<-c(cor(x=Temporario$Tmax,y=Temporario$FLO)^2)
+d<-cor.test(y=Temporario$FLO, x=Temporario$Tmax, method="pearson") #pearson , spearman ou kendall
+E<-data.frame("T. máxima" =c(a,d$estimate, c , d$p.value))
+
+Corre_max<-tableGrob(E)
 ```
+```{r, include=FALSE , message=F , warning=F}
+Temporario<- TabelabrutaIRR %>% group_by(FLO) %>% summarise(Tmin = mean(Tmin_Media)) %>% na.omit(Temporario)
 
-  
-### Irrigado subtropical
+t_mi<-ggplot(Temporario)+
+  geom_point(aes(x=Tmin,y=FLO),Temporario, color= "blue")+
+  geom_smooth(aes(x=Tmin,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura mínima (ºC)", y="Data de florecimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+
+a<-c(var(x=Temporario$Tmin,y=Temporario$FLO)) 
+c<-c(cor(x=Temporario$Tmin,y=Temporario$FLO)^2)
+d<-cor.test(y=Temporario$FLO, x=Temporario$Tmin, method="pearson") #pearson , spearman ou kendall
+E<-data.frame("T. mínima" =c(a,d$estimate, c , d$p.value))
+
+Corre_min<-tableGrob(E)
+
+```
 ```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
-
+rm(Temporario)
+T_O_IRR<-grid.arrange(t_me, t_ma, t_mi, ncol=3)
+Corre_IRR<-grid.arrange(Corre_est,Corre_med,Corre_max,Corre_min, ncol=4)
+T_O_IRR
+Corre_IRR
+```
+  
+  A menor data de floração foi aos **51** dias após a emergência onde a temperatura foi **27,36ºC**.
+  
+    
+### Irrigado subtropical
+  
+Relação da temperatura média, máxima e mínima com a data de florecimento 
+```{r, include=FALSE , message=F , include=F}
 Temporario2<- TabelabrutaIRR %>% mutate( Clima= case_when(latitude < -29 ~ "subtropical", latitude > -30 ~ "tropical"))
-Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia,Clima) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
+
+Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO) %>% summarise(TMedia = mean(TMedia)) %>% na.omit(Temporario)
 
 
- ggplot(Temporario)+
+ t_me<-ggplot(Temporario)+
   geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+
   geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura média e data de florecimento de arroz irrigados subtropical")+
+  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)")+
   theme(plot.title = element_text(hjust = 0.5))
-```
-```{r , echo=FALSE}
+
 
 a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
 c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
 d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method="pearson") #pearson , spearman ou kendall
+f<-data.frame("Estatística" =c("S²", "Cor", "r²","Valor_P"))
+E<-data.frame("T. média" =c(a,d$estimate, c , d$p.value))
+Corre_est<-tableGrob(f)
+Corre_med<-tableGrob(E)
 
-Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
+rm(Temporario)
 
-paged_table(Corre)
 ```
 
+```{r, include=FALSE , message=F , warning=F}
+Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  group_by(FLO) %>% summarise(Tmax = mean(Tmax_Media)) %>% na.omit(Temporario)
+
+
+t_ma<-ggplot(Temporario)+
+  geom_point(aes(x=Tmax,y=FLO),Temporario, color= "blue")+
+  geom_smooth(aes(x=Tmax,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura máxima (ºC)", y="Data de florecimento (DAE)" )+
+  theme(plot.title = element_text(hjust = 0.5))
+
+a<-c(var(x=Temporario$Tmax,y=Temporario$FLO)) 
+c<-c(cor(x=Temporario$Tmax,y=Temporario$FLO)^2)
+d<-cor.test(y=Temporario$FLO, x=Temporario$Tmax, method="pearson") #pearson , spearman ou kendall
+E<-data.frame("T. máxima" =c(a,d$estimate, c , d$p.value))
+
+Corre_max<-tableGrob(E)
+```
+```{r, include=FALSE , message=F , warning=F}
+Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  group_by(FLO) %>% summarise(Tmin = mean(Tmin_Media)) %>% na.omit(Temporario)
+
+t_mi<-ggplot(Temporario)+
+  geom_point(aes(x=Tmin,y=FLO),Temporario, color= "blue")+
+  geom_smooth(aes(x=Tmin,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura mínima (ºC)", y="Data de florecimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+
+a<-c(var(x=Temporario$Tmin,y=Temporario$FLO)) 
+c<-c(cor(x=Temporario$Tmin,y=Temporario$FLO)^2)
+d<-cor.test(y=Temporario$FLO, x=Temporario$Tmin, method="pearson") #pearson , spearman ou kendall
+E<-data.frame("T. mínima" =c(a,d$estimate, c , d$p.value))
+
+Corre_min<-tableGrob(E)
+
+```
+```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+rm(Temporario)
+T_O_IRR<-grid.arrange(t_me, t_ma, t_mi, ncol=3)
+Corre_IRR<-grid.arrange(Corre_est,Corre_med,Corre_max,Corre_min, ncol=4)
+T_O_IRR
+Corre_IRR
+```
+  
+  A menor data de floração foi aos **66** dias após a emergência onde a temperatura foi **22,36ºC**.
+  
 
 ### Irrigado tropical
 
-```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+Relação da temperatura média, máxima e mínima com a data de florecimento 
+```{r, include=FALSE , message=F , include=F}
+Temporario2<- TabelabrutaIRR %>% mutate( Clima= case_when(latitude < -29 ~ "subtropical", latitude > -30 ~ "tropical"))
 
-Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(TMedia,Clima) %>% summarise(FLO = mean(FLO)) %>% na.omit(Temporario)
+Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO) %>% summarise(TMedia = mean(TMedia)) %>% na.omit(Temporario)
 
 
- ggplot(Temporario)+
+ t_me<-ggplot(Temporario)+
   geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+
   geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)" , title ="Relação temperatura média e data de florecimento de arroz irrigados tropical")+
+  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)")+
   theme(plot.title = element_text(hjust = 0.5))
-```
-```{r , echo=FALSE}
+
 
 a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
 c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
 d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method="pearson") #pearson , spearman ou kendall
+f<-data.frame("Estatística" =c("S²", "Cor", "r²","Valor_P"))
+E<-data.frame("T. média" =c(a,d$estimate, c , d$p.value))
+Corre_est<-tableGrob(f)
+Corre_med<-tableGrob(E)
 
-Corre<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = d$method)
-
-paged_table(Corre)
-```
-```{r , include=FALSE}
 rm(Temporario)
-rm(Temporario2)
+
 ```
 
+```{r, include=FALSE , message=F , warning=F}
+Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  group_by(FLO) %>% summarise(Tmax = mean(Tmax_Media)) %>% na.omit(Temporario)
+
+
+t_ma<-ggplot(Temporario)+
+  geom_point(aes(x=Tmax,y=FLO),Temporario, color= "blue")+
+  geom_smooth(aes(x=Tmax,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura máxima (ºC)", y="Data de florecimento (DAE)" )+
+  theme(plot.title = element_text(hjust = 0.5))
+
+a<-c(var(x=Temporario$Tmax,y=Temporario$FLO)) 
+c<-c(cor(x=Temporario$Tmax,y=Temporario$FLO)^2)
+d<-cor.test(y=Temporario$FLO, x=Temporario$Tmax, method="pearson") #pearson , spearman ou kendall
+E<-data.frame("T. máxima" =c(a,d$estimate, c , d$p.value))
+
+Corre_max<-tableGrob(E)
+```
+```{r, include=FALSE , message=F , warning=F}
+Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  group_by(FLO) %>% summarise(Tmin = mean(Tmin_Media)) %>% na.omit(Temporario)
+
+t_mi<-ggplot(Temporario)+
+  geom_point(aes(x=Tmin,y=FLO),Temporario, color= "blue")+
+  geom_smooth(aes(x=Tmin,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura mínima (ºC)", y="Data de florecimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+
+a<-c(var(x=Temporario$Tmin,y=Temporario$FLO)) 
+c<-c(cor(x=Temporario$Tmin,y=Temporario$FLO)^2)
+d<-cor.test(y=Temporario$FLO, x=Temporario$Tmin, method="pearson") #pearson , spearman ou kendall
+E<-data.frame("T. mínima" =c(a,d$estimate, c , d$p.value))
+
+Corre_min<-tableGrob(E)
+
+```
+```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+T_O_IRR<-grid.arrange(t_me, t_ma, t_mi, ncol=3)
+Corre_IRR<-grid.arrange(Corre_est,Corre_med,Corre_max,Corre_min, ncol=4)
+T_O_IRR
+Corre_IRR
+```
+```{r , include=F}
+rm(Temporario)
+rm(a ,b,c,E)
+rm(Corre_est,Corre_med,Corre_max,Corre_min, t_me, t_ma, t_mi)
+```
+  
+  A menor data de floração foi aos **51** dias após a emergência onde a temperatura foi **27,36ºC**.
+  
 # Influencia geografica
 
 
@@ -474,7 +653,7 @@ ggplot(Temporario) +
   theme_classic()
 ```
 
-# Determinação do graus-dia para o ciclo
+# Determinação do graus-dia para o ciclo (Maturidade Fisiológica)
 
 ```{r , echo=FALSE,message=FALSE,warning=FALSE}
 Temporario<- Tabelabruta %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_ciclo=mean(graus_dia_ciclo), N_G=mean(N_G))
