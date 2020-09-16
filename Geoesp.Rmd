@@ -1,0 +1,99 @@
+---
+output: html_document
+---
+```{r , include=F}
+knitr::opts_chunk$set(warning = F, message = F)
+```
+
+```{r , include=F}
+# Pacotes necessários
+
+if(!require(tidyverse))
+  install.packages("tidyverse")
+if(!require(geobr)) 
+  install.packages("geobr")
+if(!require(ggspatial)) 
+  install.packages("ggspatial")
+if(!require(spatstat)) 
+  install.packages("spatstat") 
+
+```
+
+
+  Os dados analisados neste estudo são provenientes do programa de melhoramento de arroz de terras altas e irrigado dos anos de 1982 a 2017. No gráfico abaixo é possivel visualizar a distribuição temporal dos ensáios. Foram realizados 318 ensaios de arroz de terras altas e 239 ensaios para arroz irrigado, totalizando 557 ensaios.
+  
+```{r , echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+Temporario<- Tabelabruta %>% mutate(Legenda= case_when(SIST_CULT == "IRRIGATED" ~ "Irrigado", SIST_CULT == "UPLAND" ~ "Terras altas")) %>% group_by(ANO, Legenda) %>% summarise(Q_Ensaios= length(unique(ID_ENSAIO)))
+ggplot(Temporario) +
+  geom_col(aes(x=as.factor(ANO), y= Q_Ensaios))+
+  geom_point(aes(x=as.factor(ANO), y= Q_Ensaios, color = Legenda),data= Temporario)+
+  labs(x="ANO", y= "Número de ensaios realizados", title ="Número de ensaios realizados por ano", color = "Legenda")+
+  scale_colour_manual(values = c("blue","#EA6E16"))+
+  theme_classic()
+rm(Temporario)
+```
+  
+    
+  
+## Mapa do Brasil com as distribuições geográficas dos ensáios
+
+```{r , include=F}
+Brasil<- read_state(code_state="all",year=2010)
+
+
+  
+Mapa<-ggplot(Brasil) +
+  geom_sf(aes(group = code_state), data = Brasil, size = 0.1 , fill = "#FFF7C2") +
+  geom_point(aes(x = longitude, y = latitude, colour = "Irrigado"), data = TabelabrutaIRR, size = 1L)+
+  geom_point(aes(x = longitude, y = latitude, colour = "Terras altas"), data = TabelabrutaTA, size = 1L)+
+  scale_colour_manual(values = c("blue","#EA6E16"))+
+  labs(x = "Longitude", y = "Latitude", title = "   Distribuição geográfica dos ensaios", color = "Legenda") +
+  annotation_north_arrow(style=north_arrow_fancy_orienteering)+
+  annotation_scale(location="br", height = unit(0.15,"cm"))+
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
+
+rm(Brasil)
+
+```
+```{r , echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+Mapa
+```
+ 
+   Para o arroz de terras altas os ensáios foram realizados em 74 municípios pertencentes a 18 estados. Já para arroz irrigado foram 43 municípios pertencentes a 17 estados. Abaixo está a distribuição da variável **Produtividade** relativo aos estatos e ao sistema de cultivo.
+  
+```{r , echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+ggplot(Tabelabruta) +
+  geom_boxplot(aes(y= PROD, x= UF, color= SIST_CULT))+
+  labs(x="Unidade Federativa", y= "Produtividade (kg/ha)", title ="Produtividade de arroz em terras altas e irrigado por Unidade Federativa" , color = "Legenda")+
+  scale_colour_manual(values = c("blue","#EA6E16"))+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+  Conforme demonstrado no grafico abaixo o **ciclo da cultura varia pela latitude**, isso se dá pelas **variação de temperatura**, sendo que as médias são maiores quando a latitude se aproxima de 0.
+    
+
+```{r ,  echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+
+Temporario<-Tabelabruta %>% group_by(latitude) %>% summarise(ciclo=mean(MF_E))
+ggplot(Temporario) +
+  geom_point(aes(y= ciclo, x= latitude))+
+  geom_smooth(aes(x=latitude,y=ciclo), se= T, method='lm', color = "black")+
+  labs(y="Dias após a emergência (DAE)", x= "Latitude", color = "Legenda", title ="Correlação do ciclo da cultura com a Latitude")+
+  theme_classic()
+rm(Temporario)
+```
+
+Variação da temperatura pela latitude
+  
+```{r , echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+Temporario<- Tabelabruta %>% mutate(TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(latitude) %>% summarise(TMedia = mean(TMedia), Tmax = mean(Tmax_Media), Tmin = mean(Tmin_Media), CICLO = (mean(Tabelabruta$MF_E)))
+
+ggplot(Temporario) +
+  geom_line(aes(x=Tmax, y= latitude), data = Temporario , color = "red")+
+  geom_line(aes(x=TMedia, y= latitude), data = Temporario)+
+  geom_line(aes(x=Tmin, y= latitude), data = Temporario , color = "blue")+
+  labs(x="Temperatura (ºC)", y= "Latitude", color = "Legenda", title ="Variação da temperatura média minima, média e média maxima pela Latitude")+
+  theme_classic()
+rm(Temporario)
+```
