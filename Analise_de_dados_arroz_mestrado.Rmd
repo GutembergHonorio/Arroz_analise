@@ -46,27 +46,47 @@ library(Hmisc)
 library(PerformanceAnalytics)
 ```
 
-# Analise descritiva dos dados
+
 
 ```{r , child = c('Descri.Rmd')}
+########################## Analise descritiva dos dados #####################
 # consultar arquivo Descri.Rmd
 
 ``` 
   
-# Distribuição geografica e temporal dos ensáios
+  
   
 ```{r , child = c('Geoesp.Rmd')}
+############# Distribuição geografica e temporal dos ensáios ####################
+
 # consultar arquivo Geoesp.Rmd
 
 ```  
   
-  
-# Determinação da temperatura ótima
+    
   
 ```{r , child = c('Topt.Rmd')}
+####################### Determinação da temperatura ótima #######################
 # consultar arquivo Topt.Rmd
 
 ```
+  
+  
+      
+```{r child = c('GD.Rmd')}
+################### Graus dias para a maturidade fisiológica ###################
+
+# consultar arquivo GD.Rmd
+```
+
+
+
+```{r child = c('GDF.Rmd')}
+################### Graus dias para o florecimento ###################
+
+# consultar arquivo GDF.Rmd
+```
+  
 
 # Matrix de correlação
   

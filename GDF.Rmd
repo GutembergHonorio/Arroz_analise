@@ -2,12 +2,12 @@
 output: html_document
 ---
 
-# Determinação do graus-dia para completar o ciclo (Maturidade Fisiológica)
-  
+# Determinação do graus-dia para o florecimento
+
+
 ```{r , include=F}
 knitr::opts_chunk$set(warning = F, message = F)
 ```
-
 
 ```{r Diretório, include=FALSE} 
 # DIRETÓRIO DOS DADOS 
@@ -41,17 +41,17 @@ if(!require(modeest))
 
 # organização
 
-Temporario<- Tabelabruta %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_ciclo=mean(graus_dia_ciclo), N_G=mean(N_G))
+Temporario<- Tabelabruta %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_FLO=mean(graus_dia_FLO), N_G=mean(N_G))
 n<-nrow(Temporario)
 Temporario<- Temporario %>% mutate(N_G = 1:n)
 
 # gráfico de densidade
 
-Point<-ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
+Point<-ggplot(Temporario, aes(y=graus_dia_FLO, x= N_G)) +
   geom_point()+
   geom_hex(bins = 20)+scale_fill_continuous(type = "viridis") +
   geom_smooth(color = "red")+
-  labs(y="Graus-dia (ºC)", x= "Genótipo", title ="Variação do graus-dia do ciclo pelo genótipo")+
+  labs(y="Graus-dia (ºC)", x= "Genótipo", title ="Variação do graus-dia do ciclo para o florecimento")+
   theme_classic()
 ```
 ```{r , echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
@@ -59,7 +59,7 @@ Point<-ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
 # Histograma
 
 histo<-ggplot(Temporario) +
-  geom_histogram(aes(graus_dia_ciclo, fill=N_G), bins = 40 , col = "black")+
+  geom_histogram(aes(graus_dia_FLO, fill=N_G), bins = 40 , col = "black")+
     labs(y="Frequência", x= "Graus_dia (Cº)")+
   theme_bw()
 
@@ -70,11 +70,11 @@ combinado
 ```{r , echo=FALSE}
 
 
-a<-mfv(Temporario$graus_dia_ciclo) # moda
+a<-mfv(Temporario$graus_dia_FLO) # moda
 
     # teste de normalidade dos dados
 
-b<-shapiro.test(Temporario$graus_dia_ciclo)
+b<-shapiro.test(Temporario$graus_dia_FLO)
 alfa<-0.05
 c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0 de que os dados apresentam distribuição normal", c$c.b.p.value. > alfa ~ " não rejeita-se H0, admitindo-se que os dados apresentam distribuição normal" , c$c.b.p.value. == alfa ~ " não rejeita-se H0, admitindo-se que os dados apresentam distribuição normal" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0 de que os dados apresentam distribuição normal"  ~ "não paramétricos", resultado != "rejeita-se H0 de que os dados apresentam distribuição normal"  ~ "paramétricos" ))
 
@@ -87,16 +87,16 @@ metodo<-m$metodo
 
 ```
 
- A soma termica necessários para que as plantas completem o ciclo que mais se repete é `r a` ºC. .
+ A soma termica necessários para o florecimento que mais se repete é `r a` ºC.
    
  A normalidade dos dados foi verivicado através do teste Shapiro-Wilk. O p-valor observado foi `r b$p.value`, comparado com a significancia de `r alfa`, `r c$resultado`.Por tanto fez-se necessário o uso de testes estatísticos `r c$teste`. A correlação entre genótipo e graus-dia para o ciclo total pode ser conferido na tabela abaixo.
  
 ```{r, echo=F}
 # Estatísticas
 
-a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)) # Variação 
-c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)^2) # Correlação
-d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_ciclo, method = metodo) 
+a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_FLO)) # Variação 
+c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_FLO)^2) # Correlação
+d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_FLO, method = metodo) 
 Corr<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = metodo) # organização da tabela
 paged_table(Corr)
 
@@ -109,13 +109,13 @@ paged_table(Corr)
 
 # organização
 
-Temporario<- TabelabrutaTA %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_ciclo=mean(graus_dia_ciclo), N_G=mean(N_G))
+Temporario<- TabelabrutaTA %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_FLO=mean(graus_dia_FLO), N_G=mean(N_G))
 n<-nrow(Temporario)
 Temporario<- Temporario %>% mutate(N_G = 1:n)
 
 # gráfico de densidade
 
-Point<-ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
+Point<-ggplot(Temporario, aes(y=graus_dia_FLO, x= N_G)) +
   geom_point()+
   geom_density_2d()+
   geom_smooth(color = "red")+
@@ -128,7 +128,7 @@ Point<-ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
 # Histograma
 
 histo<-ggplot(Temporario) +
-  geom_histogram(aes(graus_dia_ciclo, fill=N_G), bins = 15 , col = "black")+
+  geom_histogram(aes(graus_dia_FLO, fill=N_G), bins = 15 , col = "black")+
     labs(y="Frequência", x= "Graus_dia (Cº)")+
   theme_bw()
 
@@ -138,11 +138,11 @@ combinado
 ```{r , echo=FALSE}
 
 
-a<-mfv(Temporario$graus_dia_ciclo) # moda
+a<-mfv(Temporario$graus_dia_FLO) # moda
 
     # teste de normalidade dos dados
 
-b<-shapiro.test(Temporario$graus_dia_ciclo)
+b<-shapiro.test(Temporario$graus_dia_FLO)
 alfa<-0.05
 c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0 de que os dados apresentam distribuição normal", c$c.b.p.value. > alfa ~ " não rejeita-se H0, admitindo-se que os dados apresentam distribuição normal" , c$c.b.p.value. == alfa ~ " não rejeita-se H0, admitindo-se que os dados apresentam distribuição normal" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0 de que os dados apresentam distribuição normal"  ~ "não paramétricos", resultado != "rejeita-se H0 de que os dados apresentam distribuição normal"  ~ "paramétricos" ))
 
@@ -155,16 +155,16 @@ metodo<-m$metodo
 
 ```
 
- Para o arroz de terras altas, a soma termica necessários para que as plantas completem o ciclo que mais se repete é `r a` ºC. .
+ Para o arroz de terras altas, a soma termica necessários para o florecimento que mais se repete é `r a` ºC.
    
  A normalidade dos dados foi verivicado através do teste Shapiro-Wilk. O p-valor observado foi `r b$p.value`, comparado com a significancia de `r alfa`, `r c$resultado`.Por tanto fez-se necessário o uso de testes estatísticos `r c$teste`. A correlação entre genótipo e graus-dia para o ciclo total pode ser conferido na tabela abaixo.
  
 ```{r, echo=F}
 # Estatísticas
 
-a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)) # Variação 
-c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)^2) # Correlação
-d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_ciclo, method = metodo) 
+a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_FLO)) # Variação 
+c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_FLO)^2) # Correlação
+d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_FLO, method = metodo) 
 Corr<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = metodo) # organização da tabela
 paged_table(Corr)
 
@@ -183,13 +183,13 @@ Temporario2<- TabelabrutaTA %>% mutate( Clima= case_when(latitude < -29 ~ "subtr
  
 # organização dos dados
 
-Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_ciclo=mean(graus_dia_ciclo), N_G=mean(N_G))
+Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_FLO=mean(graus_dia_FLO), N_G=mean(N_G))
 n<-nrow(Temporario)
 
 # gráfico de densidade
 
 Temporario<- Temporario %>% mutate(N_G = 1:n)
-Point<-ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
+Point<-ggplot(Temporario, aes(y=graus_dia_FLO, x= N_G)) +
   geom_point()+
   geom_density_2d()+
   geom_smooth(color = "red")+
@@ -202,7 +202,7 @@ Point<-ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
 # histograma
 
 histo<-ggplot(Temporario) +
-  geom_histogram(aes(graus_dia_ciclo, fill=N_G), bins = 10 , col = "black")+
+  geom_histogram(aes(graus_dia_FLO, fill=N_G), bins = 10 , col = "black")+
     labs(y="Frequência", x= "Graus_dia (Cº)")+
   theme_bw()
 
@@ -212,11 +212,11 @@ combinado
 ```{r , echo=FALSE}
 
 
-a<-mfv(Temporario$graus_dia_ciclo) # moda
+a<-mfv(Temporario$graus_dia_FLO) # moda
 
     # teste de normalidade dos dados
 
-b<-shapiro.test(Temporario$graus_dia_ciclo)
+b<-shapiro.test(Temporario$graus_dia_FLO)
 alfa<-0.05
 c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0 de que os dados apresentam distribuição normal", c$c.b.p.value. > alfa ~ " não rejeita-se H0, admitindo-se que os dados apresentam distribuição normal" , c$c.b.p.value. == alfa ~ " não rejeita-se H0, admitindo-se que os dados apresentam distribuição normal" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0 de que os dados apresentam distribuição normal"  ~ "não paramétricos", resultado != "rejeita-se H0 de que os dados apresentam distribuição normal"  ~ "paramétricos" ))
 
@@ -229,16 +229,16 @@ metodo<-m$metodo
 
 ```
 
- Para o arroz de terras altas em região subtropical, a soma termica necessários para que as plantas completem o ciclo que mais se repete é `r a` ºC. .
+ Para o arroz de terras altas em região subtropical, a soma termica necessária para o florecimento que mais se repete é `r a` ºC.
    
  A normalidade dos dados foi verivicado através do teste Shapiro-Wilk. O p-valor observado foi `r b$p.value`, comparado com a significancia de `r alfa`, `r c$resultado`.Por tanto fez-se necessário o uso de testes estatísticos `r c$teste`. A correlação entre genótipo e graus-dia para o ciclo total pode ser conferido na tabela abaixo.
  
 ```{r, echo=F}
 # Estatísticas
 
-a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)) # Variação 
-c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)^2) # Correlação
-d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_ciclo, method = metodo) 
+a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_FLO)) # Variação 
+c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_FLO)^2) # Correlação
+d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_FLO, method = metodo) 
 Corr<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = metodo) # organização da tabela
 paged_table(Corr)
 
@@ -251,13 +251,13 @@ paged_table(Corr)
 
 # organização dos dados
 
-Temporario<- Temporario2 %>% filter(Clima=="tropical") %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_ciclo=mean(graus_dia_ciclo), N_G=mean(N_G))
+Temporario<- Temporario2 %>% filter(Clima=="tropical") %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_FLO=mean(graus_dia_FLO), N_G=mean(N_G))
 n<-nrow(Temporario)
 Temporario<- Temporario %>% mutate(N_G = 1:n)
 
 # gráfico de densidade
 
-Point<-ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
+Point<-ggplot(Temporario, aes(y=graus_dia_FLO, x= N_G)) +
   geom_point()+
   geom_density_2d()+
   geom_smooth(color = "red")+
@@ -270,7 +270,7 @@ Point<-ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
 # histograma
 
 histo<-ggplot(Temporario) +
-  geom_histogram(aes(graus_dia_ciclo, fill=N_G), bins = 10 , col = "black")+
+  geom_histogram(aes(graus_dia_FLO, fill=N_G), bins = 10 , col = "black")+
     labs(y="Frequência", x= "Graus_dia (Cº)")+
   theme_bw()
 
@@ -280,11 +280,11 @@ combinado
 ```{r , echo=FALSE}
 
 
-a<-mfv(Temporario$graus_dia_ciclo) # moda
+a<-mfv(Temporario$graus_dia_FLO) # moda
 
     # teste de normalidade dos dados
 
-b<-shapiro.test(Temporario$graus_dia_ciclo)
+b<-shapiro.test(Temporario$graus_dia_FLO)
 alfa<-0.05
 c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0 de que os dados apresentam distribuição normal", c$c.b.p.value. > alfa ~ " não rejeita-se H0, admitindo-se que os dados apresentam distribuição normal" , c$c.b.p.value. == alfa ~ " não rejeita-se H0, admitindo-se que os dados apresentam distribuição normal" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0 de que os dados apresentam distribuição normal"  ~ "não paramétricos", resultado != "rejeita-se H0 de que os dados apresentam distribuição normal"  ~ "paramétricos" ))
 
@@ -304,9 +304,9 @@ metodo<-m$metodo
 ```{r, echo=F}
 # Estatísticas
 
-a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)) # Variação 
-c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)^2) # Correlação
-d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_ciclo, method = metodo) 
+a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_FLO)) # Variação 
+c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_FLO)^2) # Correlação
+d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_FLO, method = metodo) 
 Corr<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = metodo) # organização da tabela
 paged_table(Corr)
 
@@ -321,13 +321,13 @@ paged_table(Corr)
 
 # organização
 
-Temporario<- TabelabrutaIRR %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_ciclo=mean(graus_dia_ciclo), N_G=mean(N_G))
+Temporario<- TabelabrutaIRR %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_FLO=mean(graus_dia_FLO), N_G=mean(N_G))
 n<-nrow(Temporario)
 Temporario<- Temporario %>% mutate(N_G = 1:n)
 
 # gráfico de densidade
 
-Point<-ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
+Point<-ggplot(Temporario, aes(y=graus_dia_FLO, x= N_G)) +
   geom_point()+
   geom_density_2d()+
   geom_smooth(color = "red")+
@@ -340,7 +340,7 @@ Point<-ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
 # histograma
 
 histo<-ggplot(Temporario) +
-  geom_histogram(aes(graus_dia_ciclo, fill=N_G), bins = 15 , col = "black")+
+  geom_histogram(aes(graus_dia_FLO, fill=N_G), bins = 15 , col = "black")+
     labs(y="Frequência", x= "Graus_dia (Cº)")+
   theme_bw()
 
@@ -350,11 +350,11 @@ combinado
 ```{r , echo=FALSE}
 
 
-a<-mfv(Temporario$graus_dia_ciclo) # moda
+a<-mfv(Temporario$graus_dia_FLO) # moda
 
     # teste de normalidade dos dados
 
-b<-shapiro.test(Temporario$graus_dia_ciclo)
+b<-shapiro.test(Temporario$graus_dia_FLO)
 alfa<-0.05
 c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0 de que os dados apresentam distribuição normal", c$c.b.p.value. > alfa ~ " não rejeita-se H0, admitindo-se que os dados apresentam distribuição normal" , c$c.b.p.value. == alfa ~ " não rejeita-se H0, admitindo-se que os dados apresentam distribuição normal" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0 de que os dados apresentam distribuição normal"  ~ "não paramétricos", resultado != "rejeita-se H0 de que os dados apresentam distribuição normal"  ~ "paramétricos" ))
 
@@ -374,9 +374,9 @@ metodo<-m$metodo
 ```{r, echo=F}
 # Estatísticas
 
-a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)) # Variação 
-c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)^2) # Correlação
-d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_ciclo, method = metodo) 
+a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_FLO)) # Variação 
+c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_FLO)^2) # Correlação
+d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_FLO, method = metodo) 
 Corr<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = metodo) # organização da tabela
 paged_table(Corr)
 
@@ -395,13 +395,13 @@ Temporario2<- TabelabrutaIRR %>% mutate( Clima= case_when(latitude < -29 ~ "subt
  
 # organização dos dados
 
-Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_ciclo=mean(graus_dia_ciclo), N_G=mean(N_G))
+Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_FLO=mean(graus_dia_FLO), N_G=mean(N_G))
 n<-nrow(Temporario)
 
 # gráfico de densidade
 
 Temporario<- Temporario %>% mutate(N_G = 1:n)
-Point<-ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
+Point<-ggplot(Temporario, aes(y=graus_dia_FLO, x= N_G)) +
   geom_point()+
   geom_density_2d()+
   geom_smooth(color = "red")+
@@ -414,7 +414,7 @@ Point<-ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
 # histograma
 
 histo<-ggplot(Temporario) +
-  geom_histogram(aes(graus_dia_ciclo, fill=N_G), bins = 10 , col = "black")+
+  geom_histogram(aes(graus_dia_FLO, fill=N_G), bins = 10 , col = "black")+
     labs(y="Frequência", x= "Graus_dia (Cº)")+
   theme_bw()
 
@@ -424,11 +424,11 @@ combinado
 ```{r , echo=FALSE}
 
 
-a<-mfv(Temporario$graus_dia_ciclo) # moda
+a<-mfv(Temporario$graus_dia_FLO) # moda
 
     # teste de normalidade dos dados
 
-b<-shapiro.test(Temporario$graus_dia_ciclo)
+b<-shapiro.test(Temporario$graus_dia_FLO)
 alfa<-0.05
 c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0 de que os dados apresentam distribuição normal", c$c.b.p.value. > alfa ~ " não rejeita-se H0, admitindo-se que os dados apresentam distribuição normal" , c$c.b.p.value. == alfa ~ " não rejeita-se H0, admitindo-se que os dados apresentam distribuição normal" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0 de que os dados apresentam distribuição normal"  ~ "não paramétricos", resultado != "rejeita-se H0 de que os dados apresentam distribuição normal"  ~ "paramétricos" ))
 
@@ -448,9 +448,9 @@ metodo<-m$metodo
 ```{r, echo=F}
 # Estatísticas
 
-a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)) # Variação 
-c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)^2) # Correlação
-d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_ciclo, method = metodo) 
+a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_FLO)) # Variação 
+c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_FLO)^2) # Correlação
+d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_FLO, method = metodo) 
 Corr<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = metodo) # organização da tabela
 paged_table(Corr)
 
@@ -463,13 +463,13 @@ paged_table(Corr)
 
 # organização dos dados
 
-Temporario<- Temporario2 %>% filter(Clima=="tropical") %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_ciclo=mean(graus_dia_ciclo), N_G=mean(N_G))
+Temporario<- Temporario2 %>% filter(Clima=="tropical") %>% group_by(GENOTIPO) %>% mutate(N_G = c(1)) %>% summarise(graus_dia_FLO=mean(graus_dia_FLO), N_G=mean(N_G))
 n<-nrow(Temporario)
 Temporario<- Temporario %>% mutate(N_G = 1:n)
 
 # gráfico de densidade
 
-Point<-ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
+Point<-ggplot(Temporario, aes(y=graus_dia_FLO, x= N_G)) +
   geom_point()+
   geom_density_2d()+
   geom_smooth(color = "red")+
@@ -482,7 +482,7 @@ Point<-ggplot(Temporario, aes(y=graus_dia_ciclo, x= N_G)) +
 # histograma
 
 histo<-ggplot(Temporario) +
-  geom_histogram(aes(graus_dia_ciclo, fill=N_G), bins = 10 , col = "black")+
+  geom_histogram(aes(graus_dia_FLO, fill=N_G), bins = 10 , col = "black")+
     labs(y="Frequência", x= "Graus_dia (Cº)")+
   theme_bw()
 
@@ -492,11 +492,11 @@ combinado
 ```{r , echo=FALSE}
 
 
-a<-mfv(Temporario$graus_dia_ciclo) # moda
+a<-mfv(Temporario$graus_dia_FLO) # moda
 
     # teste de normalidade dos dados
 
-b<-shapiro.test(Temporario$graus_dia_ciclo)
+b<-shapiro.test(Temporario$graus_dia_FLO)
 alfa<-0.05
 c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0 de que os dados apresentam distribuição normal", c$c.b.p.value. > alfa ~ " não rejeita-se H0, admitindo-se que os dados apresentam distribuição normal" , c$c.b.p.value. == alfa ~ " não rejeita-se H0, admitindo-se que os dados apresentam distribuição normal" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0 de que os dados apresentam distribuição normal"  ~ "não paramétricos", resultado != "rejeita-se H0 de que os dados apresentam distribuição normal"  ~ "paramétricos" ))
 
@@ -509,16 +509,16 @@ metodo<-m$metodo
 
 ```
 
- Para o arroz irrigado em regição tropical, a soma termica necessários para que as plantas completem o ciclo que mais se repete é `r a` ºC. .
+ Para o arroz irrigado em regição tropical, a soma termica necessários para o florecimento que mais se repete é `r a` ºC.
    
  A normalidade dos dados foi verivicado através do teste Shapiro-Wilk. O p-valor observado foi `r b$p.value`, comparado com a significancia de `r alfa`, `r c$resultado`.Por tanto fez-se necessário o uso de testes estatísticos `r c$teste`. A correlação entre genótipo e graus-dia para o ciclo total pode ser conferido na tabela abaixo.
  
 ```{r, echo=F}
 # Estatísticas
 
-a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)) # Variação 
-c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_ciclo)^2) # Correlação
-d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_ciclo, method = metodo) 
+a<-c(var(x=Temporario$N_G,y=Temporario$graus_dia_FLO)) # Variação 
+c<-c(cor(x=Temporario$N_G,y=Temporario$graus_dia_FLO)^2) # Correlação
+d<-cor.test(x=Temporario$N_G,y=Temporario$graus_dia_FLO, method = metodo) 
 Corr<-data.frame(Variância=a, Correlação=d$estimate, "r²" = c , Valor_P =d$p.value, Metodo = metodo) # organização da tabela
 paged_table(Corr)
 

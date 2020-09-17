@@ -1,6 +1,8 @@
 ---
 output: html_document
 ---
+# MATRIZ DE CORRELAÇÃO
+  
 ```{r , include=F}
 knitr::opts_chunk$set(warning = F, message = F)
 ```
@@ -20,7 +22,6 @@ Tabelabruta<- read.csv(Caminho_dos_dados, header = TRUE, sep = ";", stringsAsFac
 TabelabrutaIRR = subset(Tabelabruta, SIST_CULT == "IRRIGATED")
 TabelabrutaTA = subset(Tabelabruta, SIST_CULT == "UPLAND")
 
-############################# MATRIZ DE CORRELAÇÃO #############################
 ```
 
 

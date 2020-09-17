@@ -1,9 +1,12 @@
 ---
 output: html_document
 ---
+# Analise descritiva dos dados
+  
 ```{r , include=F}
 knitr::opts_chunk$set(warning = F, message = F)
 ```
+
 ```{r Diretório, include=FALSE} 
 # DIRETÓRIO DOS DADOS 
 
