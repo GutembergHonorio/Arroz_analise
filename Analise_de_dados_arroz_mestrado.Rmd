@@ -50,6 +50,7 @@ library(PerformanceAnalytics)
 
 ```{r , child = c('Descri.Rmd')}
 ########################## Analise descritiva dos dados #####################
+
 # consultar arquivo Descri.Rmd
 
 ``` 
@@ -66,7 +67,8 @@ library(PerformanceAnalytics)
     
   
 ```{r , child = c('Topt.Rmd')}
-####################### Determinação da temperatura ótima #######################
+####################### Determinação da temperatura ótima ######################
+
 # consultar arquivo Topt.Rmd
 
 ```
@@ -88,8 +90,10 @@ library(PerformanceAnalytics)
 ```
   
 
-# Matrix de correlação
+
   
 ```{r ,  child = c('Mcorr.Rmd')}
+########################## Matrix de correlação ##########################
+
 # consultar arquivo Mcorr.Rmd
 ```
