@@ -1,13 +1,17 @@
 ---
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
-# Determinação da temperatura ótima
+# Determinação da temperatura ótima (Método 1)
+  
+
   
 ```{r , include=F}
-knitr::opts_chunk$set(warning = F, message = F , echo = F)
+knitr::opts_chunk$set(warning = F, message = F)
 ```
 
-```{r Diretório, include=FALSE} 
+```{r Diretório} 
 # DIRETÓRIO DOS DADOS 
 
 
@@ -19,18 +23,12 @@ Tabelabruta<- read.csv(Caminho_dos_dados, header = TRUE, sep = ";", stringsAsFac
 
 ### Tabelas acessório
      
-TabelabrutaIRR = subset(Tabelabruta, SIST_CULT == "IRRIGATED")
-TabelabrutaTA = subset(Tabelabruta, SIST_CULT == "UPLAND")
+TabelabrutaIRR = subset(Tabelabruta, SIST_CULT == "IRRIGATED") # Irrigado
+TabelabrutaTA = subset(Tabelabruta, SIST_CULT == "UPLAND") # Terras altas
 
 ```
-  
-    
-## Terras altas
 
- 
-Relação da temperatura média, máxima e mínima com a data de florecimento 
-  
-```{r , include=F}
+```{r}
 
 # Pacotes necessários para esta operação
 
@@ -39,28 +37,51 @@ if(!require(tidyverse))
 if(!require(gridExtra)) 
   install.packages("gridExtra")
 ```
+
+
+
   
-```{r, include=FALSE }
+## 1) Utilizando a média por genótipo
+  
+  Para esta análise foi calculado a média do florescimento (FLO), média da temperatura mínima média (Tmin_Media), média da  temperatura máxima média (Tmax_Media) e temperatura média (TMedia) para cada genótipo levando em consideração a latitude do ensaio. Consideramos a latitude pois alguns genótipos foram cultivados em mais de um local. (#Discutir isso com o orientador) 
+  
+```{r}
+
+# Preparando os dados
+
+mediasTA <- TabelabrutaTA  %>% group_by(GENOTIPO, latitude) %>% summarise(FLO_Medio = mean(FLO),Tmax_Media=	mean(Tmax_Media),Tmin_Media= mean(Tmin_Media)) #Dados do arroz terras altas
+
+mediasIRR <- TabelabrutaIRR  %>% group_by(GENOTIPO, latitude) %>% summarise(FLO_Medio = mean(FLO),Tmax_Media=	mean(Tmax_Media),Tmin_Media= mean(Tmin_Media)) #Dados do arroz irrigado
 
 
-Temporario<- TabelabrutaTA %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO) %>% summarise(TMedia= mean(TMedia)) %>% na.omit(Temporario)
+```
+  
+### 1.1) Terras altas
 
- t_me<-ggplot(Temporario)+
-  geom_point(aes(x=TMedia,y=FLO),Temporario, color= "#EA6E16")+
-  geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)")+
+ 
+```{r}
+# criando a temperatura média e omitindo os NA.
+
+Temporario <- mediasTA %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO_Medio) %>% summarise(TMedia) %>% na.omit(Temporario) # obs.: essa etapa é diferente entre os itens 1,2 e 3.
+
+# Plotando o florescimento pela temperatura média
+
+ t_me<-ggplot(Temporario)+ 
+  geom_point(aes(x=TMedia,y=FLO_Medio),Temporario, color= "#EA6E16")+
+  geom_smooth(aes(x=TMedia,y=FLO_Medio), se= T, method='lm', color = "black")+
+  labs(x="Temperatura média (ºC)", y="Data de florescimento (DAE)")+
   theme(plot.title = element_text(hjust = 0.5))
 ```
-```{r , echo=FALSE}
+```{r}
 
 
-    # teste de normalidade dos dados
+    # teste de normalidade dos dados (Temperatura média)
 
-b<-shapiro.test(Temporario$TMedia)
-alfa<-0.05
-c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+b<-shapiro.test(Temporario$TMedia) # Teste Shapiro-Wilk
+alfa<-0.05 # nivel de significancia 
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" )) # Interpretação do p-valor do teste Shapiro-Wilk
 
-m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" )) # Escolha do método de correlação com base no teste Shapiro-Wilk
 metodo<-m$metodo 
 
 normalidade<-c$resultado 
@@ -68,12 +89,15 @@ normalidade<-c$resultado
 ```
 
 ```{r}
-# Estatistica
+# Estatística
  
-a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
-c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
-d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method= metodo) 
-f<-data.frame("Estatística" =c("S²", "Cor", "r²","Teste Shapiro-Wilk", "Metodo", "Valor_P"))
+a<-c(var(x=Temporario$TMedia,y=Temporario$FLO_Medio)) # variância
+c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO_Medio)^2)# Coeficiente de determinação (r2)
+d<-cor.test(y=Temporario$FLO_Medio, x=Temporario$TMedia, method= metodo) # Teste de correlação
+
+# visualização dos resultados 
+
+f<-data.frame("Estatística" =c("S²", "Cor", "r²","Teste Shapiro-Wilk", "Método", "Valor_P")) 
 E<-data.frame("T. média" =c(a,d$estimate, c ,normalidade, metodo, d$p.value ))
 Corre_est<-tableGrob(f)
 Corre_med<-tableGrob(E)
@@ -81,32 +105,37 @@ Corre_med<-tableGrob(E)
 
 ```
 ```{r}
-tem<-sort(Temporario$FLO)
+# Classsificação da menor data de florescimento e sua respectiva temperatura média
+
+tem<-sort(Temporario$FLO_Medio)
 n<-tem[1]
-Te<-subset(Temporario, FLO == n)
+Te<-subset(Temporario, FLO_Medio == n)
 rm(tem,n)
 ```
 
-```{r, include=FALSE}
+```{r}
 
-Temporario<- TabelabrutaTA %>% group_by(FLO) %>% summarise(Tmax = mean(Tmax_Media)) %>% na.omit(Temporario)
+
+Temporario<- mediasTA %>% group_by(FLO_Medio) %>% summarise(Tmax = Tmax_Media) %>% na.omit(Temporario) # obs.: essa etapa é diferente entre os itens 1,2 e 3. 
+
+# Plotando o florescimento pela temperatura máxima
 
 t_ma<-ggplot(Temporario)+
-  geom_point(aes(x=Tmax,y=FLO),Temporario, color= "#EA6E16")+
-  geom_smooth(aes(x=Tmax,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura máxima (ºC)", y="Data de florecimento (DAE)" )+
+  geom_point(aes(x=Tmax,y=FLO_Medio),Temporario, color= "#EA6E16")+
+  geom_smooth(aes(x=Tmax,y=FLO_Medio), se= T, method='lm', color = "black")+
+  labs(x="Temperatura máxima (ºC)", y="Data de florescimento (DAE)" )+
   theme(plot.title = element_text(hjust = 0.5))
 ```
-```{r , echo=FALSE}
+```{r }
 
 
-    # teste de normalidade dos dados
+    # teste de normalidade dos dados (Temperatura máxima)
 
-b<-shapiro.test(Temporario$Tmax)
-alfa<-0.05
-c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+b<-shapiro.test(Temporario$Tmax) # Teste Shapiro-Wilk
+alfa<-0.05 # nível de significancia
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" )) # interpretação do p-valor.
 
-m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" )) # escolha do método de correlação com base no teste Shapiro-Wilk
 metodo<-m$metodo 
 
 normalidade<-c$resultado 
@@ -114,54 +143,57 @@ normalidade<-c$resultado
 ```
 ```{r}
 
-a<-c(var(x=Temporario$Tmax,y=Temporario$FLO)) 
-c<-c(cor(x=Temporario$Tmax,y=Temporario$FLO)^2)
-d<-cor.test(y=Temporario$FLO, x=Temporario$Tmax, method= metodo) 
-E<-data.frame("T. máxima" =c(a,d$estimate, c , normalidade, metodo, d$p.value))
+a<-c(var(x=Temporario$Tmax,y=Temporario$FLO_Medio)) # análise de variância  
+c<-c(cor(x=Temporario$Tmax,y=Temporario$FLO_Medio)^2)# Coeficiente de correlação (r2)
+d<-cor.test(y=Temporario$FLO_Medio, x=Temporario$Tmax, method= metodo) # teste de correlação
+E<-data.frame("T. máxima" =c(a,d$estimate, c , normalidade, metodo, d$p.value)) # visualização dos resultados
 
 Corre_max<-tableGrob(E)
 ```
-```{r, include=FALSE}
-Temporario<- TabelabrutaTA %>% group_by(FLO) %>% summarise(Tmin = mean(Tmin_Media)) %>% na.omit(Temporario)
+```{r}
+
+Temporario<- mediasTA %>% group_by(FLO_Medio) %>% summarise(Tmin = Tmin_Media) %>% na.omit(Temporario) # obs.: essa etapa é diferente entre os itens 1,2 e 3.
+
+# Plotando o florescimento pela temperatura mínima
 
 t_mi<-ggplot(Temporario)+
-  geom_point(aes(x=Tmin,y=FLO),Temporario, color= "#EA6E16")+
-  geom_smooth(aes(x=Tmin,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura mínima (ºC)", y="Data de florecimento (DAE)")+
+  geom_point(aes(x=Tmin,y=FLO_Medio),Temporario, color= "#EA6E16")+
+  geom_smooth(aes(x=Tmin,y=FLO_Medio), se= T, method='lm', color = "black")+
+  labs(x="Temperatura mínima (ºC)", y="Data de florescimento (DAE)")+
   theme(plot.title = element_text(hjust = 0.5))
 ```
-```{r , echo=FALSE}
+```{r}
 
 
     # teste de normalidade dos dados
 
-b<-shapiro.test(Temporario$Tmin)
-alfa<-0.05
-c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+b<-shapiro.test(Temporario$Tmin)# Teste Shapiro-Wilk
+alfa<-0.05# nível de significancia
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))# interpretação do p-valor.
 
-m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))  # escolha do método de correlação com base no teste Shapiro-Wilk
 metodo<-m$metodo 
 
 normalidade<-c$resultado
 
 ```
 ```{r}
-a<-c(var(x=Temporario$Tmin,y=Temporario$FLO)) 
-c<-c(cor(x=Temporario$Tmin,y=Temporario$FLO)^2)
-d<-cor.test(y=Temporario$FLO, x=Temporario$Tmin, method=metodo) #pearson , spearman ou kendall
+a<-c(var(x=Temporario$Tmin,y=Temporario$FLO_Medio)) # análise de variância
+c<-c(cor(x=Temporario$Tmin,y=Temporario$FLO_Medio)^2)# Coeficiente de correlação (r2)
+d<-cor.test(y=Temporario$FLO_Medio, x=Temporario$Tmin, method=metodo) # teste de correlação
 E<-data.frame("T. mínima" =c(a,d$estimate, c , normalidade , metodo , d$p.value))
 
 Corre_min<-tableGrob(E)
 
 ```
-
-
+  
+Relação da temperatura média, máxima e mínima com a data de florescimento 
 ```{r, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+
+# Visualização dos graficos e tabelas
 
 T_O_TA<-grid.arrange(t_me, t_ma, t_mi, ncol=3)
 Corre_TA<-grid.arrange(Corre_est,Corre_med,Corre_max,Corre_min, ncol=4)
-T_O_TA
-Corre_TA
 ```
 
 
@@ -169,20 +201,20 @@ Corre_TA
 
   
 
-## Irrigado
+### 1.2) Irrigado
   
-Relação da temperatura média, máxima e mínima com a data de florecimento 
-```{r, include=FALSE }
 
-Temporario<- TabelabrutaIRR %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO) %>% summarise(TMedia= mean(TMedia)) %>% na.omit(Temporario)
+```{r}
+
+Temporario<- mediasIRR %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO_Medio) %>% summarise(TMedia) %>% na.omit(Temporario) # obs.: essa etapa é diferente entre os itens 1,2 e 3.
 
  t_me<-ggplot(Temporario)+
-  geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+
-  geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)")+
+  geom_point(aes(x=TMedia,y=FLO_Medio),Temporario, color= "blue")+
+  geom_smooth(aes(x=TMedia,y=FLO_Medio), se= T, method='lm', color = "black")+
+  labs(x="Temperatura média (ºC)", y="Data de florescimento (DAE)")+
   theme(plot.title = element_text(hjust = 0.5))
 ```
-```{r , echo=FALSE}
+```{r}
 
 
     # teste de normalidade dos dados
@@ -199,12 +231,1108 @@ normalidade<-c$resultado
 ```
 
 ```{r}
-# Estatistica
+# Estatística
+ 
+a<-c(var(x=Temporario$TMedia,y=Temporario$FLO_Medio)) 
+c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO_Medio)^2)
+d<-cor.test(y=Temporario$FLO_Medio, x=Temporario$TMedia, method= metodo) 
+f<-data.frame("Estatística" =c("S²", "Cor", "r²","Teste Shapiro-Wilk", "Método", "Valor_P"))
+E<-data.frame("T. média" =c(a,d$estimate, c ,normalidade, metodo, d$p.value ))
+Corre_est<-tableGrob(f)
+Corre_med<-tableGrob(E)
+
+
+```
+
+```{r}
+tem<-sort(Temporario$FLO_Medio)
+n<-tem[1]
+Te<-subset(Temporario, FLO_Medio == n)
+rm(tem,n)
+```
+
+```{r}
+
+Temporario<- mediasIRR %>% group_by(FLO_Medio) %>% summarise(Tmax = Tmax_Media) %>% na.omit(Temporario) # obs.: essa etapa é diferente entre os itens 1,2 e 3.
+
+t_ma<-ggplot(Temporario)+
+  geom_point(aes(x=Tmax,y=FLO_Medio),Temporario, color= "blue")+
+  geom_smooth(aes(x=Tmax,y=FLO_Medio), se= T, method='lm', color = "black")+
+  labs(x="Temperatura máxima (ºC)", y="Data de florescimento (DAE)" )+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$Tmax)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado 
+
+```
+
+```{r}
+
+a<-c(var(x=Temporario$Tmax,y=Temporario$FLO_Medio)) 
+c<-c(cor(x=Temporario$Tmax,y=Temporario$FLO_Medio)^2)
+d<-cor.test(y=Temporario$FLO_Medio, x=Temporario$Tmax, method= metodo) 
+E<-data.frame("T. máxima" =c(a,d$estimate, c , normalidade, metodo, d$p.value))
+
+Corre_max<-tableGrob(E)
+```
+
+```{r}
+Temporario<- mediasIRR %>% group_by(FLO_Medio) %>% summarise(Tmin = Tmin_Media) %>% na.omit(Temporario) # obs.: essa etapa é diferente entre os itens 1,2 e 3.
+
+t_mi<-ggplot(Temporario)+
+  geom_point(aes(x=Tmin,y=FLO_Medio),Temporario, color= "blue")+
+  geom_smooth(aes(x=Tmin,y=FLO_Medio), se= T, method='lm', color = "black")+
+  labs(x="Temperatura mínima (ºC)", y="Data de florescimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$Tmin)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado
+
+```
+```{r}
+a<-c(var(x=Temporario$Tmin,y=Temporario$FLO_Medio)) 
+c<-c(cor(x=Temporario$Tmin,y=Temporario$FLO_Medio)^2)
+d<-cor.test(y=Temporario$FLO_Medio, x=Temporario$Tmin, method=metodo) #pearson , spearman ou kendall
+E<-data.frame("T. mínima" =c(a,d$estimate, c , normalidade , metodo , d$p.value))
+
+Corre_min<-tableGrob(E)
+
+```
+  
+Relação da temperatura média, máxima e mínima com a data de florescimento 
+  
+```{r, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+rm(Temporario)
+T_O_IRR<-grid.arrange(t_me, t_ma, t_mi, ncol=3)
+Corre_IRR<-grid.arrange(Corre_est,Corre_med,Corre_max,Corre_min, ncol=4)
+```
+  
+   A menor data de floração foi aos **`r Te[1,1]`** dias após a emergência, onde a temperatura média foi **`r Te[1,2]`****ºC**. 
+  
+    
+#### 1.2.1) Irrigado subtropical
+  
+```{r}
+Temporario2<- mediasIRR %>% mutate( Clima= case_when(latitude <= -30 ~ "subtropical", latitude > -30 ~ "tropical")) # obs.: essa etapa é diferente entre os itens 1,2 e 3.
+
+Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO_Medio) %>% summarise(TMedia) %>% na.omit(Temporario) 
+
+
+ t_me<-ggplot(Temporario)+
+  geom_point(aes(x=TMedia,y=FLO_Medio),Temporario, color= "blue")+
+  geom_smooth(aes(x=TMedia,y=FLO_Medio), se= T, method='lm', color = "black")+
+  labs(x="Temperatura média (ºC)", y="Data de florescimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$TMedia)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado 
+
+```
+
+```{r}
+# Estatística
+ 
+a<-c(var(x=Temporario$TMedia,y=Temporario$FLO_Medio)) 
+c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO_Medio)^2)
+d<-cor.test(y=Temporario$FLO_Medio, x=Temporario$TMedia, method= metodo) 
+f<-data.frame("Estatística" =c("S²", "Cor", "r²","Teste Shapiro-Wilk", "Método", "Valor_P"))
+E<-data.frame("T. média" =c(a,d$estimate, c ,normalidade, metodo, d$p.value ))
+Corre_est<-tableGrob(f)
+Corre_med<-tableGrob(E)
+
+
+```
+
+```{r}
+tem<-sort(Temporario$FLO_Medio)
+n<-tem[1]
+Te<-subset(Temporario, FLO_Medio == n)
+rm(tem,n)
+```
+
+```{r}
+Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  group_by(FLO_Medio) %>% summarise(Tmax = Tmax_Media) %>% na.omit(Temporario) # obs.: essa etapa é diferente entre os itens 1,2 e 3.
+
+
+t_ma<-ggplot(Temporario)+
+  geom_point(aes(x=Tmax,y=FLO_Medio),Temporario, color= "blue")+
+  geom_smooth(aes(x=Tmax,y=FLO_Medio), se= T, method='lm', color = "black")+
+  labs(x="Temperatura máxima (ºC)", y="Data de florescimento (DAE)" )+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$Tmax)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado 
+
+```
+
+```{r}
+
+a<-c(var(x=Temporario$Tmax,y=Temporario$FLO_Medio)) 
+c<-c(cor(x=Temporario$Tmax,y=Temporario$FLO_Medio)^2)
+d<-cor.test(y=Temporario$FLO_Medio, x=Temporario$Tmax, method= metodo) 
+E<-data.frame("T. máxima" =c(a,d$estimate, c , normalidade, metodo, d$p.value))
+
+Corre_max<-tableGrob(E)
+```
+
+```{r}
+Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  group_by(FLO_Medio) %>% summarise(Tmin = Tmin_Media) %>% na.omit(Temporario) # obs.: essa etapa é diferente entre os itens 1,2 e 3.
+
+t_mi<-ggplot(Temporario)+
+  geom_point(aes(x=Tmin,y=FLO_Medio),Temporario, color= "blue")+
+  geom_smooth(aes(x=Tmin,y=FLO_Medio), se= T, method='lm', color = "black")+
+  labs(x="Temperatura mínima (ºC)", y="Data de florescimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$Tmin)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado
+
+```
+```{r}
+a<-c(var(x=Temporario$Tmin,y=Temporario$FLO_Medio)) 
+c<-c(cor(x=Temporario$Tmin,y=Temporario$FLO_Medio)^2)
+d<-cor.test(y=Temporario$FLO_Medio, x=Temporario$Tmin, method=metodo) #pearson , spearman ou kendall
+E<-data.frame("T. mínima" =c(a,d$estimate, c , normalidade , metodo , d$p.value))
+
+Corre_min<-tableGrob(E)
+
+```
+  
+Relação da temperatura média, máxima e mínima com a data de florescimento 
+  
+```{r,  fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+
+T_O_IRR<-grid.arrange(t_me, t_ma, t_mi, ncol=3)
+Corre_IRR<-grid.arrange(Corre_est,Corre_med,Corre_max,Corre_min, ncol=4)
+```
+  
+ A menor data de floração foi aos **`r Te[1,1]`** dias após a emergência, onde a temperatura média foi **`r Te[1,2]`****ºC**.   
+
+#### 1.2.2) Irrigado tropical
+
+```{r}
+Temporario2<- mediasIRR %>% mutate( Clima= case_when(latitude <= -30 ~ "subtropical", latitude > -30 ~ "tropical")) # obs.: essa etapa é diferente entre os itens 1,2 e 3.
+
+Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO_Medio) %>% summarise(TMedia ) %>% na.omit(Temporario)
+
+
+ t_me<-ggplot(Temporario)+
+  geom_point(aes(x=TMedia,y=FLO_Medio),Temporario, color= "blue")+
+  geom_smooth(aes(x=TMedia,y=FLO_Medio), se= T, method='lm', color = "black")+
+  labs(x="Temperatura média (ºC)", y="Data de florescimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$TMedia)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado 
+
+```
+
+```{r}
+# Estatística
+ 
+a<-c(var(x=Temporario$TMedia,y=Temporario$FLO_Medio)) 
+c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO_Medio)^2)
+d<-cor.test(y=Temporario$FLO_Medio, x=Temporario$TMedia, method= metodo) 
+f<-data.frame("Estatística" =c("S²", "Cor", "r²","Teste Shapiro-Wilk", "Método", "Valor_P"))
+E<-data.frame("T. média" =c(a,d$estimate, c ,normalidade, metodo, d$p.value ))
+Corre_est<-tableGrob(f)
+Corre_med<-tableGrob(E)
+
+
+```
+
+```{r}
+tem<-sort(Temporario$FLO_Medio)
+n<-tem[1]
+Te<-subset(Temporario, FLO_Medio == n)
+rm(tem,n)
+```
+ 
+```{r}
+Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  group_by(FLO_Medio) %>% summarise(Tmax = Tmax_Media) %>% na.omit(Temporario) # obs.: essa etapa é diferente entre os itens 1,2 e 3.
+
+
+t_ma<-ggplot(Temporario)+
+  geom_point(aes(x=Tmax,y=FLO_Medio),Temporario, color= "blue")+
+  geom_smooth(aes(x=Tmax,y=FLO_Medio), se= T, method='lm', color = "black")+
+  labs(x="Temperatura máxima (ºC)", y="Data de florescimento (DAE)" )+
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$Tmax)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado 
+
+```
+
+```{r}
+
+a<-c(var(x=Temporario$Tmax,y=Temporario$FLO_Medio)) 
+c<-c(cor(x=Temporario$Tmax,y=Temporario$FLO_Medio)^2)
+d<-cor.test(y=Temporario$FLO_Medio, x=Temporario$Tmax, method= metodo) 
+E<-data.frame("T. máxima" =c(a,d$estimate, c , normalidade, metodo, d$p.value))
+
+Corre_max<-tableGrob(E)
+```
+
+```{r}
+Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  group_by(FLO_Medio) %>% summarise(Tmin = Tmin_Media) %>% na.omit(Temporario) # obs.: essa etapa é diferente entre os itens 1,2 e 3.
+
+t_mi<-ggplot(Temporario)+
+  geom_point(aes(x=Tmin,y=FLO_Medio),Temporario, color= "blue")+
+  geom_smooth(aes(x=Tmin,y=FLO_Medio), se= T, method='lm', color = "black")+
+  labs(x="Temperatura mínima (ºC)", y="Data de florescimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$Tmin)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado
+
+```
+```{r}
+a<-c(var(x=Temporario$Tmin,y=Temporario$FLO_Medio)) 
+c<-c(cor(x=Temporario$Tmin,y=Temporario$FLO_Medio)^2)
+d<-cor.test(y=Temporario$FLO_Medio, x=Temporario$Tmin, method=metodo) #pearson , spearman ou kendall
+E<-data.frame("T. mínima" =c(a,d$estimate, c , normalidade , metodo , d$p.value))
+
+Corre_min<-tableGrob(E)
+
+```
+  
+Relação da temperatura média, máxima e mínima com a data de florescimento 
+  
+```{r,  fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+T_O_IRR<-grid.arrange(t_me, t_ma, t_mi, ncol=3)
+Corre_IRR<-grid.arrange(Corre_est,Corre_med,Corre_max,Corre_min, ncol=4)
+```
+
+  
+ A menor data de floração foi aos **`r Te[1,1]`** dias após a emergência, onde a temperatura média foi **`r Te[1,2]`****ºC**.  
+
+
+```{r}
+rm(Temporario)
+rm(a ,b,c,E)
+rm(Corre_est,Corre_med,Corre_max,Corre_min, t_me, t_ma, t_mi)
+```
+  
+  
+  
+## 2) Utilizando a média por ensaio 
+  
+     Para esta análise foi calculado a média do florescimento (FLO), média da temperatura mínima média (Tmin_Media), média da  temperatura máxima média (Tmax_Media) e temperatura média (TMedia) para cada ensaio.
+  
+```{r}
+
+# Preparando os dados
+
+mediasTA <- TabelabrutaTA  %>%  group_by(ID_ENSAIO, latitude) %>% summarise(	FLO_Media =	mean(FLO), Tmax_Media = mean(Tmax_Media),	Tmin_Media = mean(Tmin_Media))
+
+mediasIRR <- TabelabrutaIRR  %>%  group_by(ID_ENSAIO, latitude) %>% summarise(	FLO_Media =	mean(FLO), Tmax_Media = mean(Tmax_Media),	Tmin_Media = mean(Tmin_Media))
+```      
+  
+### 2.1) Terras altas
+
+ 
+```{r}
+Temporario <- mediasTA %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO_Media) %>% summarise(TMedia) %>% na.omit(Temporario)
+
+ t_me<-ggplot(Temporario)+
+  geom_point(aes(x=TMedia,y=FLO_Media),Temporario, color= "#EA6E16")+
+  geom_smooth(aes(x=TMedia,y=FLO_Media), se= T, method='lm', color = "black")+
+  labs(x="Temperatura média (ºC)", y="Data de florescimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$TMedia)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado 
+
+```
+
+```{r}
+# Estatística
+ 
+a<-c(var(x=Temporario$TMedia,y=Temporario$FLO_Media)) 
+c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO_Media)^2)
+d<-cor.test(y=Temporario$FLO_Media, x=Temporario$TMedia, method= metodo) 
+f<-data.frame("Estatística" =c("S²", "Cor", "r²","Teste Shapiro-Wilk", "Método", "Valor_P"))
+E<-data.frame("T. média" =c(a,d$estimate, c ,normalidade, metodo, d$p.value ))
+Corre_est<-tableGrob(f)
+Corre_med<-tableGrob(E)
+
+
+```
+```{r}
+tem<-sort(Temporario$FLO_Media)
+n<-tem[1]
+Te<-subset(Temporario, FLO_Media == n)
+rm(tem,n)
+```
+
+```{r}
+
+Temporario<- mediasTA %>% group_by(FLO_Media) %>% summarise(Tmax = Tmax_Media) %>% na.omit(Temporario)
+
+t_ma<-ggplot(Temporario)+
+  geom_point(aes(x=Tmax,y=FLO_Media),Temporario, color= "#EA6E16")+
+  geom_smooth(aes(x=Tmax,y=FLO_Media), se= T, method='lm', color = "black")+
+  labs(x="Temperatura máxima (ºC)", y="Data de florescimento (DAE)" )+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$Tmax)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado 
+
+```
+```{r}
+
+a<-c(var(x=Temporario$Tmax,y=Temporario$FLO_Media)) 
+c<-c(cor(x=Temporario$Tmax,y=Temporario$FLO_Media)^2)
+d<-cor.test(y=Temporario$FLO_Media, x=Temporario$Tmax, method= metodo) 
+E<-data.frame("T. máxima" =c(a,d$estimate, c , normalidade, metodo, d$p.value))
+
+Corre_max<-tableGrob(E)
+```
+```{r}
+Temporario<- mediasTA %>% group_by(FLO_Media) %>% summarise(Tmin = Tmin_Media) %>% na.omit(Temporario)
+
+t_mi<-ggplot(Temporario)+
+  geom_point(aes(x=Tmin,y=FLO_Media),Temporario, color= "#EA6E16")+
+  geom_smooth(aes(x=Tmin,y=FLO_Media), se= T, method='lm', color = "black")+
+  labs(x="Temperatura mínima (ºC)", y="Data de florescimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$Tmin)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado
+
+```
+```{r}
+a<-c(var(x=Temporario$Tmin,y=Temporario$FLO_Media)) 
+c<-c(cor(x=Temporario$Tmin,y=Temporario$FLO_Media)^2)
+d<-cor.test(y=Temporario$FLO_Media, x=Temporario$Tmin, method=metodo) #pearson , spearman ou kendall
+E<-data.frame("T. mínima" =c(a,d$estimate, c , normalidade , metodo , d$p.value))
+
+Corre_min<-tableGrob(E)
+
+```
+  
+Relação da temperatura média, máxima e mínima com a data de florescimento 
+  
+```{r, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+
+T_O_TA<-grid.arrange(t_me, t_ma, t_mi, ncol=3)
+Corre_TA<-grid.arrange(Corre_est,Corre_med,Corre_max,Corre_min, ncol=4)
+```
+
+
+  A menor data de floração foi aos **`r Te[1,1]`** dias após a emergência, onde a temperatura média foi **`r Te[1,2]`****ºC**. 
+
+  
+
+### 2.2) Irrigado
+  
+```{r}
+
+Temporario<- mediasIRR %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO_Media) %>% summarise(TMedia) %>% na.omit(Temporario)
+
+ t_me<-ggplot(Temporario)+
+  geom_point(aes(x=TMedia,y=FLO_Media),Temporario, color= "blue")+
+  geom_smooth(aes(x=TMedia,y=FLO_Media), se= T, method='lm', color = "black")+
+  labs(x="Temperatura média (ºC)", y="Data de florescimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$TMedia)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado 
+
+```
+
+```{r}
+# Estatística
+ 
+a<-c(var(x=Temporario$TMedia,y=Temporario$FLO_Media)) 
+c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO_Media)^2)
+d<-cor.test(y=Temporario$FLO_Media, x=Temporario$TMedia, method= metodo) 
+f<-data.frame("Estatística" =c("S²", "Cor", "r²","Teste Shapiro-Wilk", "Método", "Valor_P"))
+E<-data.frame("T. média" =c(a,d$estimate, c ,normalidade, metodo, d$p.value ))
+Corre_est<-tableGrob(f)
+Corre_med<-tableGrob(E)
+
+
+```
+
+```{r}
+tem<-sort(Temporario$FLO_Media)
+n<-tem[1]
+Te<-subset(Temporario, FLO_Media == n)
+rm(tem,n)
+```
+
+```{r}
+
+Temporario<- mediasIRR %>% group_by(FLO_Media) %>% summarise(Tmax = Tmax_Media) %>% na.omit(Temporario)
+
+t_ma<-ggplot(Temporario)+
+  geom_point(aes(x=Tmax,y=FLO_Media),Temporario, color= "blue")+
+  geom_smooth(aes(x=Tmax,y=FLO_Media), se= T, method='lm', color = "black")+
+  labs(x="Temperatura máxima (ºC)", y="Data de florescimento (DAE)" )+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$Tmax)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado 
+
+```
+
+```{r}
+
+a<-c(var(x=Temporario$Tmax,y=Temporario$FLO_Media)) 
+c<-c(cor(x=Temporario$Tmax,y=Temporario$FLO_Media)^2)
+d<-cor.test(y=Temporario$FLO_Media, x=Temporario$Tmax, method= metodo) 
+E<-data.frame("T. máxima" =c(a,d$estimate, c , normalidade, metodo, d$p.value))
+
+Corre_max<-tableGrob(E)
+```
+
+```{r}
+Temporario<- mediasIRR %>% group_by(FLO_Media) %>% summarise(Tmin = Tmin_Media) %>% na.omit(Temporario)
+
+t_mi<-ggplot(Temporario)+
+  geom_point(aes(x=Tmin,y=FLO_Media),Temporario, color= "blue")+
+  geom_smooth(aes(x=Tmin,y=FLO_Media), se= T, method='lm', color = "black")+
+  labs(x="Temperatura mínima (ºC)", y="Data de florescimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$Tmin)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado
+
+```
+```{r}
+a<-c(var(x=Temporario$Tmin,y=Temporario$FLO_Media)) 
+c<-c(cor(x=Temporario$Tmin,y=Temporario$FLO_Media)^2)
+d<-cor.test(y=Temporario$FLO_Media, x=Temporario$Tmin, method=metodo) #pearson , spearman ou kendall
+E<-data.frame("T. mínima" =c(a,d$estimate, c , normalidade , metodo , d$p.value))
+
+Corre_min<-tableGrob(E)
+
+```
+  
+Relação da temperatura média, máxima e mínima com a data de florescimento 
+    
+
+```{r,fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+rm(Temporario)
+T_O_IRR<-grid.arrange(t_me, t_ma, t_mi, ncol=3)
+Corre_IRR<-grid.arrange(Corre_est,Corre_med,Corre_max,Corre_min, ncol=4)
+```
+  
+   A menor data de floração foi aos **`r Te[1,1]`** dias após a emergência, onde a temperatura média foi **`r Te[1,2]`****ºC**. 
+  
+    
+#### 2.2.1) Irrigado subtropical
+  
+```{r}
+Temporario2<- mediasIRR %>% mutate( Clima= case_when(latitude <= -30 ~ "subtropical", latitude > -30 ~ "tropical"))
+
+Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO_Media) %>% summarise(TMedia) %>% na.omit(Temporario)
+
+
+ t_me<-ggplot(Temporario)+
+  geom_point(aes(x=TMedia,y=FLO_Media),Temporario, color= "blue")+
+  geom_smooth(aes(x=TMedia,y=FLO_Media), se= T, method='lm', color = "black")+
+  labs(x="Temperatura média (ºC)", y="Data de florescimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$TMedia)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado 
+
+```
+
+```{r}
+# Estatística
+ 
+a<-c(var(x=Temporario$TMedia,y=Temporario$FLO_Media)) 
+c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO_Media)^2)
+d<-cor.test(y=Temporario$FLO_Media, x=Temporario$TMedia, method= metodo) 
+f<-data.frame("Estatística" =c("S²", "Cor", "r²","Teste Shapiro-Wilk", "Método", "Valor_P"))
+E<-data.frame("T. média" =c(a,d$estimate, c ,normalidade, metodo, d$p.value ))
+Corre_est<-tableGrob(f)
+Corre_med<-tableGrob(E)
+
+
+```
+
+```{r}
+tem<-sort(Temporario$FLO_Media)
+n<-tem[1]
+Te<-subset(Temporario, FLO_Media == n)
+rm(tem,n)
+```
+
+```{r}
+Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  group_by(FLO_Media) %>% summarise(Tmax = Tmax_Media) %>% na.omit(Temporario)
+
+
+t_ma<-ggplot(Temporario)+
+  geom_point(aes(x=Tmax,y=FLO_Media),Temporario, color= "blue")+
+  geom_smooth(aes(x=Tmax,y=FLO_Media), se= T, method='lm', color = "black")+
+  labs(x="Temperatura máxima (ºC)", y="Data de florescimento (DAE)" )+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$Tmax)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado 
+
+```
+
+```{r}
+
+a<-c(var(x=Temporario$Tmax,y=Temporario$FLO_Media)) 
+c<-c(cor(x=Temporario$Tmax,y=Temporario$FLO_Media)^2)
+d<-cor.test(y=Temporario$FLO_Media, x=Temporario$Tmax, method= metodo) 
+E<-data.frame("T. máxima" =c(a,d$estimate, c , normalidade, metodo, d$p.value))
+
+Corre_max<-tableGrob(E)
+```
+
+```{r}
+Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  group_by(FLO_Media) %>% summarise(Tmin = Tmin_Media) %>% na.omit(Temporario)
+
+t_mi<-ggplot(Temporario)+
+  geom_point(aes(x=Tmin,y=FLO_Media),Temporario, color= "blue")+
+  geom_smooth(aes(x=Tmin,y=FLO_Media), se= T, method='lm', color = "black")+
+  labs(x="Temperatura mínima (ºC)", y="Data de florescimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$Tmin)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado
+
+```
+```{r}
+a<-c(var(x=Temporario$Tmin,y=Temporario$FLO_Media)) 
+c<-c(cor(x=Temporario$Tmin,y=Temporario$FLO_Media)^2)
+d<-cor.test(y=Temporario$FLO_Media, x=Temporario$Tmin, method=metodo) #pearson , spearman ou kendall
+E<-data.frame("T. mínima" =c(a,d$estimate, c , normalidade , metodo , d$p.value))
+
+Corre_min<-tableGrob(E)
+
+```
+  
+Relação da temperatura média, máxima e mínima com a data de florescimento 
+  
+```{r,  fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+
+T_O_IRR<-grid.arrange(t_me, t_ma, t_mi, ncol=3)
+Corre_IRR<-grid.arrange(Corre_est,Corre_med,Corre_max,Corre_min, ncol=4)
+```
+  
+ A menor data de floração foi aos **`r Te[1,1]`** dias após a emergência, onde a temperatura média foi **`r Te[1,2]`****ºC**.   
+
+#### 2.2.2) Irrigado tropical
+
+```{r}
+Temporario2<- mediasIRR %>% mutate( Clima= case_when(latitude <= -30 ~ "subtropical", latitude > -30 ~ "tropical"))
+
+Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO_Media) %>% summarise(TMedia ) %>% na.omit(Temporario)
+
+
+ t_me<-ggplot(Temporario)+
+  geom_point(aes(x=TMedia,y=FLO_Media),Temporario, color= "blue")+
+  geom_smooth(aes(x=TMedia,y=FLO_Media), se= T, method='lm', color = "black")+
+  labs(x="Temperatura média (ºC)", y="Data de florescimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$TMedia)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado 
+
+```
+
+```{r}
+# Estatística
+ 
+a<-c(var(x=Temporario$TMedia,y=Temporario$FLO_Media)) 
+c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO_Media)^2)
+d<-cor.test(y=Temporario$FLO_Media, x=Temporario$TMedia, method= metodo) 
+f<-data.frame("Estatística" =c("S²", "Cor", "r²","Teste Shapiro-Wilk", "Método", "Valor_P"))
+E<-data.frame("T. média" =c(a,d$estimate, c ,normalidade, metodo, d$p.value ))
+Corre_est<-tableGrob(f)
+Corre_med<-tableGrob(E)
+
+
+```
+
+```{r}
+tem<-sort(Temporario$FLO_Media)
+n<-tem[1]
+Te<-subset(Temporario, FLO_Media == n)
+rm(tem,n)
+```
+ 
+```{r}
+Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  group_by(FLO_Media) %>% summarise(Tmax = Tmax_Media) %>% na.omit(Temporario)
+
+
+t_ma<-ggplot(Temporario)+
+  geom_point(aes(x=Tmax,y=FLO_Media),Temporario, color= "blue")+
+  geom_smooth(aes(x=Tmax,y=FLO_Media), se= T, method='lm', color = "black")+
+  labs(x="Temperatura máxima (ºC)", y="Data de florescimento (DAE)" )+
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$Tmax)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado 
+
+```
+
+```{r}
+
+a<-c(var(x=Temporario$Tmax,y=Temporario$FLO_Media)) 
+c<-c(cor(x=Temporario$Tmax,y=Temporario$FLO_Media)^2)
+d<-cor.test(y=Temporario$FLO_Media, x=Temporario$Tmax, method= metodo) 
+E<-data.frame("T. máxima" =c(a,d$estimate, c , normalidade, metodo, d$p.value))
+
+Corre_max<-tableGrob(E)
+```
+
+```{r}
+Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  group_by(FLO_Media) %>% summarise(Tmin = Tmin_Media) %>% na.omit(Temporario)
+
+t_mi<-ggplot(Temporario)+
+  geom_point(aes(x=Tmin,y=FLO_Media),Temporario, color= "blue")+
+  geom_smooth(aes(x=Tmin,y=FLO_Media), se= T, method='lm', color = "black")+
+  labs(x="Temperatura mínima (ºC)", y="Data de florescimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$Tmin)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado
+
+```
+```{r}
+a<-c(var(x=Temporario$Tmin,y=Temporario$FLO_Media)) 
+c<-c(cor(x=Temporario$Tmin,y=Temporario$FLO_Media)^2)
+d<-cor.test(y=Temporario$FLO_Media, x=Temporario$Tmin, method=metodo) #pearson , spearman ou kendall
+E<-data.frame("T. mínima" =c(a,d$estimate, c , normalidade , metodo , d$p.value))
+
+Corre_min<-tableGrob(E)
+
+```
+  
+Relação da temperatura média, máxima e mínima com a data de florescimento 
+    
+```{r,  fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+T_O_IRR<-grid.arrange(t_me, t_ma, t_mi, ncol=3)
+Corre_IRR<-grid.arrange(Corre_est,Corre_med,Corre_max,Corre_min, ncol=4)
+```
+
+  
+ A menor data de floração foi aos **`r Te[1,1]`** dias após a emergência, onde a temperatura média foi **`r Te[1,2]`****ºC**.   
+ 
+```{r}
+rm(Temporario)
+rm(a ,b,c,E)
+rm(Corre_est,Corre_med,Corre_max,Corre_min, t_me, t_ma, t_mi)
+```
+  
+    
+      
+## 3) Utilizando a média das temperaturas pela floração
+  
+    
+      
+  
+
+ Para esta análise foram calculados a  média da temperatura mínima média (Tmin_Media), média da  temperatura máxima média (Tmax_Media) e temperatura média (TMedia) para cada data de florescimento, não levando em consideração o genótipo ou o ensaio. (#Discutir isso com o orientador)
+  
+### 3.1) Terras altas
+
+ 
+```{r }
+
+
+Temporario <- TabelabrutaTA %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO) %>% summarise(TMedia = mean(TMedia)) %>% na.omit(Temporario)
+
+ t_me<-ggplot(Temporario)+
+  geom_point(aes(x=TMedia,y=FLO),Temporario, color= "#EA6E16")+
+  geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura média (ºC)", y="Data de florescimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$TMedia)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado 
+
+```
+
+```{r}
+# Estatística
  
 a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
 c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
 d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method= metodo) 
-f<-data.frame("Estatística" =c("S²", "Cor", "r²","Teste Shapiro-Wilk", "Metodo", "Valor_P"))
+f<-data.frame("Estatística" =c("S²", "Cor", "r²","Teste Shapiro-Wilk", "Método", "Valor_P"))
+E<-data.frame("T. média" =c(a,d$estimate, c ,normalidade, metodo, d$p.value ))
+Corre_est<-tableGrob(f)
+Corre_med<-tableGrob(E)
+
+
+```
+```{r}
+tem<-sort(Temporario$FLO)
+n<-tem[1]
+Te<-subset(Temporario, FLO == n)
+rm(tem,n)
+```
+
+```{r}
+
+Temporario<- TabelabrutaTA %>% group_by(FLO) %>% summarise(Tmax = mean(Tmax_Media)) %>% na.omit(Temporario)
+
+t_ma<-ggplot(Temporario)+
+  geom_point(aes(x=Tmax,y=FLO),Temporario, color= "#EA6E16")+
+  geom_smooth(aes(x=Tmax,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura máxima (ºC)", y="Data de florescimento (DAE)" )+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$Tmax)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado 
+
+```
+```{r}
+
+a<-c(var(x=Temporario$Tmax,y=Temporario$FLO)) 
+c<-c(cor(x=Temporario$Tmax,y=Temporario$FLO)^2)
+d<-cor.test(y=Temporario$FLO, x=Temporario$Tmax, method= metodo) 
+E<-data.frame("T. máxima" =c(a,d$estimate, c , normalidade, metodo, d$p.value))
+
+Corre_max<-tableGrob(E)
+```
+```{r}
+Temporario<- TabelabrutaTA %>% group_by(FLO) %>% summarise(Tmin = mean(Tmin_Media)) %>% na.omit(Temporario)
+
+t_mi<-ggplot(Temporario)+
+  geom_point(aes(x=Tmin,y=FLO),Temporario, color= "#EA6E16")+
+  geom_smooth(aes(x=Tmin,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura mínima (ºC)", y="Data de florescimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$Tmin)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado
+
+```
+```{r}
+a<-c(var(x=Temporario$Tmin,y=Temporario$FLO)) 
+c<-c(cor(x=Temporario$Tmin,y=Temporario$FLO)^2)
+d<-cor.test(y=Temporario$FLO, x=Temporario$Tmin, method=metodo) #pearson , spearman ou kendall
+E<-data.frame("T. mínima" =c(a,d$estimate, c , normalidade , metodo , d$p.value))
+
+Corre_min<-tableGrob(E)
+
+```
+  
+Relação da temperatura média, máxima e mínima com a data de florescimento   
+  
+```{r, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+
+T_O_TA<-grid.arrange(t_me, t_ma, t_mi, ncol=3)
+Corre_TA<-grid.arrange(Corre_est,Corre_med,Corre_max,Corre_min, ncol=4)
+```
+
+
+  A menor data de floração foi aos **`r Te[1,1]`** dias após a emergência, onde a temperatura média foi **`r Te[1,2]`****ºC**. 
+
+  
+
+### 3.2) Irrigado
+  
+
+```{r}
+
+Temporario<- TabelabrutaIRR %>% mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO) %>% summarise(TMedia = mean(TMedia)) %>% na.omit(Temporario)
+
+ t_me<-ggplot(Temporario)+
+  geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+
+  geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
+  labs(x="Temperatura média (ºC)", y="Data de florescimento (DAE)")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+
+
+    # teste de normalidade dos dados
+
+b<-shapiro.test(Temporario$TMedia)
+alfa<-0.05
+c<- data.frame(c(b$p.value)) ; c<- c %>% mutate( resultado = case_when(c$c.b.p.value. <  alfa ~ "rejeita-se H0", c$c.b.p.value. > alfa ~ " não rejeita-se H0" , c$c.b.p.value. == alfa ~ " não rejeita-se H0" )) ; c<- c %>%  mutate( teste = case_when(resultado == "rejeita-se H0"  ~ "não paramétricos", resultado != "rejeita-se H0"  ~ "paramétricos" ))
+
+m<- c %>% mutate( metodo = case_when(resultado == "rejeita-se H0" ~  "spearman", resultado != "rejeita-se H0"  ~ "pearson" ))
+metodo<-m$metodo 
+
+normalidade<-c$resultado 
+
+```
+
+```{r}
+# Estatística
+ 
+a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
+c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
+d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method= metodo) 
+f<-data.frame("Estatística" =c("S²", "Cor", "r²","Teste Shapiro-Wilk", "Método", "Valor_P"))
 E<-data.frame("T. média" =c(a,d$estimate, c ,normalidade, metodo, d$p.value ))
 Corre_est<-tableGrob(f)
 Corre_med<-tableGrob(E)
@@ -219,18 +1347,18 @@ Te<-subset(Temporario, FLO == n)
 rm(tem,n)
 ```
 
-```{r, include=FALSE }
+```{r}
 
 Temporario<- TabelabrutaIRR %>% group_by(FLO) %>% summarise(Tmax = mean(Tmax_Media)) %>% na.omit(Temporario)
 
 t_ma<-ggplot(Temporario)+
   geom_point(aes(x=Tmax,y=FLO),Temporario, color= "blue")+
   geom_smooth(aes(x=Tmax,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura máxima (ºC)", y="Data de florecimento (DAE)" )+
+  labs(x="Temperatura máxima (ºC)", y="Data de florescimento (DAE)" )+
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r , echo=FALSE}
+```{r}
 
 
     # teste de normalidade dos dados
@@ -256,17 +1384,17 @@ E<-data.frame("T. máxima" =c(a,d$estimate, c , normalidade, metodo, d$p.value))
 Corre_max<-tableGrob(E)
 ```
 
-```{r, include=FALSE }
+```{r}
 Temporario<- TabelabrutaIRR %>% group_by(FLO) %>% summarise(Tmin = mean(Tmin_Media)) %>% na.omit(Temporario)
 
 t_mi<-ggplot(Temporario)+
   geom_point(aes(x=Tmin,y=FLO),Temporario, color= "blue")+
   geom_smooth(aes(x=Tmin,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura mínima (ºC)", y="Data de florecimento (DAE)")+
+  labs(x="Temperatura mínima (ºC)", y="Data de florescimento (DAE)")+
   theme(plot.title = element_text(hjust = 0.5))
 
 ```
-```{r , echo=FALSE}
+```{r}
 
 
     # teste de normalidade dos dados
@@ -290,22 +1418,22 @@ E<-data.frame("T. mínima" =c(a,d$estimate, c , normalidade , metodo , d$p.value
 Corre_min<-tableGrob(E)
 
 ```
-```{r,  message=FALSE,warning=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+  
+Relação da temperatura média, máxima e mínima com a data de florescimento 
+  
+```{r fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 rm(Temporario)
 T_O_IRR<-grid.arrange(t_me, t_ma, t_mi, ncol=3)
 Corre_IRR<-grid.arrange(Corre_est,Corre_med,Corre_max,Corre_min, ncol=4)
-T_O_IRR
-Corre_IRR
 ```
   
    A menor data de floração foi aos **`r Te[1,1]`** dias após a emergência, onde a temperatura média foi **`r Te[1,2]`****ºC**. 
   
     
-### Irrigado subtropical
+#### 3.2.1) Irrigado subtropical
   
-Relação da temperatura média, máxima e mínima com a data de florecimento 
-```{r, include=FALSE  }
-Temporario2<- TabelabrutaIRR %>% mutate( Clima= case_when(latitude < -29 ~ "subtropical", latitude > -30 ~ "tropical"))
+```{r}
+Temporario2<- TabelabrutaIRR %>% mutate( Clima= case_when(latitude <= -30 ~ "subtropical", latitude > -30 ~ "tropical"))
 
 Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO) %>% summarise(TMedia = mean(TMedia)) %>% na.omit(Temporario)
 
@@ -313,11 +1441,11 @@ Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  mutate( TMedia = 
  t_me<-ggplot(Temporario)+
   geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+
   geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)")+
+  labs(x="Temperatura média (ºC)", y="Data de florescimento (DAE)")+
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r , echo=FALSE}
+```{r}
 
 
     # teste de normalidade dos dados
@@ -334,12 +1462,12 @@ normalidade<-c$resultado
 ```
 
 ```{r}
-# Estatistica
+# Estatística
  
 a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
 c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
 d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method= metodo) 
-f<-data.frame("Estatística" =c("S²", "Cor", "r²","Teste Shapiro-Wilk", "Metodo", "Valor_P"))
+f<-data.frame("Estatística" =c("S²", "Cor", "r²","Teste Shapiro-Wilk", "Método", "Valor_P"))
 E<-data.frame("T. média" =c(a,d$estimate, c ,normalidade, metodo, d$p.value ))
 Corre_est<-tableGrob(f)
 Corre_med<-tableGrob(E)
@@ -354,18 +1482,18 @@ Te<-subset(Temporario, FLO == n)
 rm(tem,n)
 ```
 
-```{r, include=FALSE }
+```{r}
 Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  group_by(FLO) %>% summarise(Tmax = mean(Tmax_Media)) %>% na.omit(Temporario)
 
 
 t_ma<-ggplot(Temporario)+
   geom_point(aes(x=Tmax,y=FLO),Temporario, color= "blue")+
   geom_smooth(aes(x=Tmax,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura máxima (ºC)", y="Data de florecimento (DAE)" )+
+  labs(x="Temperatura máxima (ºC)", y="Data de florescimento (DAE)" )+
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r , echo=FALSE}
+```{r}
 
 
     # teste de normalidade dos dados
@@ -391,16 +1519,16 @@ E<-data.frame("T. máxima" =c(a,d$estimate, c , normalidade, metodo, d$p.value))
 Corre_max<-tableGrob(E)
 ```
 
-```{r, include=FALSE }
+```{r}
 Temporario<- Temporario2 %>% filter(Clima=="subtropical") %>%  group_by(FLO) %>% summarise(Tmin = mean(Tmin_Media)) %>% na.omit(Temporario)
 
 t_mi<-ggplot(Temporario)+
   geom_point(aes(x=Tmin,y=FLO),Temporario, color= "blue")+
   geom_smooth(aes(x=Tmin,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura mínima (ºC)", y="Data de florecimento (DAE)")+
+  labs(x="Temperatura mínima (ºC)", y="Data de florescimento (DAE)")+
   theme(plot.title = element_text(hjust = 0.5))
 ```
-```{r , echo=FALSE}
+```{r}
 
 
     # teste de normalidade dos dados
@@ -424,21 +1552,21 @@ E<-data.frame("T. mínima" =c(a,d$estimate, c , normalidade , metodo , d$p.value
 Corre_min<-tableGrob(E)
 
 ```
+  
+Relação da temperatura média, máxima e mínima com a data de florescimento 
+    
 ```{r,  fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 
 T_O_IRR<-grid.arrange(t_me, t_ma, t_mi, ncol=3)
 Corre_IRR<-grid.arrange(Corre_est,Corre_med,Corre_max,Corre_min, ncol=4)
-T_O_IRR
-Corre_IRR
 ```
   
  A menor data de floração foi aos **`r Te[1,1]`** dias após a emergência, onde a temperatura média foi **`r Te[1,2]`****ºC**.   
 
-### Irrigado tropical
+#### 3.2.2) Irrigado tropical
 
-Relação da temperatura média, máxima e mínima com a data de florecimento 
-```{r, include=FALSE}
-Temporario2<- TabelabrutaIRR %>% mutate( Clima= case_when(latitude < -29 ~ "subtropical", latitude > -30 ~ "tropical"))
+```{r}
+Temporario2<- TabelabrutaIRR %>% mutate( Clima= case_when(latitude <= -30 ~ "subtropical", latitude > -30 ~ "tropical"))
 
 Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  mutate( TMedia = ((Tmax_Media+Tmin_Media)/2)) %>% group_by(FLO) %>% summarise(TMedia = mean(TMedia)) %>% na.omit(Temporario)
 
@@ -446,11 +1574,11 @@ Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  mutate( TMedia = ((T
  t_me<-ggplot(Temporario)+
   geom_point(aes(x=TMedia,y=FLO),Temporario, color= "blue")+
   geom_smooth(aes(x=TMedia,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura média (ºC)", y="Data de florecimento (DAE)")+
+  labs(x="Temperatura média (ºC)", y="Data de florescimento (DAE)")+
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r , echo=FALSE}
+```{r}
 
 
     # teste de normalidade dos dados
@@ -467,12 +1595,12 @@ normalidade<-c$resultado
 ```
 
 ```{r}
-# Estatistica
+# Estatística
  
 a<-c(var(x=Temporario$TMedia,y=Temporario$FLO)) 
 c<-c(cor(x=Temporario$TMedia,y=Temporario$FLO)^2)
 d<-cor.test(y=Temporario$FLO, x=Temporario$TMedia, method= metodo) 
-f<-data.frame("Estatística" =c("S²", "Cor", "r²","Teste Shapiro-Wilk", "Metodo", "Valor_P"))
+f<-data.frame("Estatística" =c("S²", "Cor", "r²","Teste Shapiro-Wilk", "Método", "Valor_P"))
 E<-data.frame("T. média" =c(a,d$estimate, c ,normalidade, metodo, d$p.value ))
 Corre_est<-tableGrob(f)
 Corre_med<-tableGrob(E)
@@ -487,19 +1615,19 @@ Te<-subset(Temporario, FLO == n)
 rm(tem,n)
 ```
  
-```{r, include=FALSE }
+```{r}
 Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  group_by(FLO) %>% summarise(Tmax = mean(Tmax_Media)) %>% na.omit(Temporario)
 
 
 t_ma<-ggplot(Temporario)+
   geom_point(aes(x=Tmax,y=FLO),Temporario, color= "blue")+
   geom_smooth(aes(x=Tmax,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura máxima (ºC)", y="Data de florecimento (DAE)" )+
+  labs(x="Temperatura máxima (ºC)", y="Data de florescimento (DAE)" )+
   theme(plot.title = element_text(hjust = 0.5))
 
 ```
 
-```{r , echo=FALSE}
+```{r}
 
 
     # teste de normalidade dos dados
@@ -525,16 +1653,16 @@ E<-data.frame("T. máxima" =c(a,d$estimate, c , normalidade, metodo, d$p.value))
 Corre_max<-tableGrob(E)
 ```
 
-```{r, include=FALSE }
+```{r}
 Temporario<- Temporario2 %>% filter(Clima=="tropical") %>%  group_by(FLO) %>% summarise(Tmin = mean(Tmin_Media)) %>% na.omit(Temporario)
 
 t_mi<-ggplot(Temporario)+
   geom_point(aes(x=Tmin,y=FLO),Temporario, color= "blue")+
   geom_smooth(aes(x=Tmin,y=FLO), se= T, method='lm', color = "black")+
-  labs(x="Temperatura mínima (ºC)", y="Data de florecimento (DAE)")+
+  labs(x="Temperatura mínima (ºC)", y="Data de florescimento (DAE)")+
   theme(plot.title = element_text(hjust = 0.5))
 ```
-```{r , echo=FALSE}
+```{r}
 
 
     # teste de normalidade dos dados
@@ -558,16 +1686,22 @@ E<-data.frame("T. mínima" =c(a,d$estimate, c , normalidade , metodo , d$p.value
 Corre_min<-tableGrob(E)
 
 ```
+  
+Relação da temperatura média, máxima e mínima com a data de florescimento 
+  
 ```{r,  fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 T_O_IRR<-grid.arrange(t_me, t_ma, t_mi, ncol=3)
 Corre_IRR<-grid.arrange(Corre_est,Corre_med,Corre_max,Corre_min, ncol=4)
-T_O_IRR
-Corre_IRR
 ```
-```{r , include=F}
+
+  
+ A menor data de floração foi aos **`r Te[1,1]`** dias após a emergência, onde a temperatura média foi **`r Te[1,2]`****ºC**.   
+ 
+```{r}
 rm(Temporario)
 rm(a ,b,c,E)
 rm(Corre_est,Corre_med,Corre_max,Corre_min, t_me, t_ma, t_mi)
 ```
+
   
- A menor data de floração foi aos **`r Te[1,1]`** dias após a emergência, onde a temperatura média foi **`r Te[1,2]`****ºC**.   
+
